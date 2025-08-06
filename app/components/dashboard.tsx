@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card"
-import { Separator } from "~/components/ui/separator"
 import { Button } from "~/components/ui/button"
 import { Textarea } from "~/components/ui/textarea"
 import type { ChartConfig } from "~/components/ui/chart"
@@ -116,10 +115,10 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(100,100,120,0.3),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(100,100,120,0.3),transparent_50%)]"></div>
-      </div>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(100,100,120,0.3),transparent_50%)]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(100,100,120,0.3),transparent_50%)]"></div>
+        </div>
       <div className="container mx-auto p-4 relative z-10">
         <div className="flex flex-col gap-0">
           {/* 統合カード */}
@@ -245,19 +244,21 @@ export function Dashboard() {
             
             {/* グラフヘッダー */}
             <CardHeader className="py-4 px-6 bg-gradient-to-r from-slate-700/20 to-slate-600/20 backdrop-blur-sm border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-white">
-                    勤務時間推移
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-300 mt-0.5">
-                    日別の勤務時間を表示しています
-                  </CardDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-white">
+                      勤務時間推移
+                    </CardTitle>
+                    <CardDescription className="text-sm text-gray-300 mt-0.5">
+                      日別の勤務時間を表示しています
+                    </CardDescription>
+                  </div>
                 </div>
               </div>
             </CardHeader>
