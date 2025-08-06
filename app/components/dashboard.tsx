@@ -105,6 +105,15 @@ export function Dashboard() {
     console.log("退勤打刻:", formatTime(currentTime), "コメント:", comment)
   }
 
+  // アナログ時計用の計算
+  const hours = currentTime.getHours() % 12
+  const minutes = currentTime.getMinutes()
+  const seconds = currentTime.getSeconds()
+  
+  const hourDegrees = (hours * 30) + (minutes * 0.5)
+  const minuteDegrees = minutes * 6
+  const secondDegrees = seconds * 6
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="absolute inset-0 opacity-10">
@@ -118,72 +127,138 @@ export function Dashboard() {
             {/* 打刻セクション */}
             <div className="bg-gradient-to-r from-slate-700/30 to-slate-600/30 backdrop-blur-sm p-4 border-b border-white/10">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                  <div className="relative text-center space-y-1 bg-black/50 backdrop-blur-md rounded-xl py-3 px-4 border border-white/20">
-                    <div className="text-xs font-medium text-gray-300">
-                      {formatDate(currentTime)}
+                <div className="flex gap-3 items-center justify-center">
+                  {/* デジタル時計 */}
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                    <div className="relative text-center space-y-1 bg-black/50 backdrop-blur-md rounded-xl py-3 px-4 border border-white/20">
+                      <div className="text-xs font-medium text-gray-300">
+                        {formatDate(currentTime)}
+                      </div>
+                      <div className="text-2xl font-bold tracking-wider text-white">
+                        {formatTime(currentTime)}
+                      </div>
                     </div>
-                    <div className="text-2xl font-bold tracking-wider text-white">
-                      {formatTime(currentTime)}
+                  </div>
+                  
+                  {/* アナログ時計 */}
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                    <div className="relative w-24 h-24 bg-black/50 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center">
+                      <svg className="w-20 h-20" viewBox="0 0 100 100">
+                        {/* 時計の文字盤 */}
+                        <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2"/>
+                        {/* 時間のマーカー */}
+                        {[...Array(12)].map((_, i) => (
+                          <line
+                            key={i}
+                            x1="50"
+                            y1="5"
+                            x2="50"
+                            y2="10"
+                            stroke="rgba(255,255,255,0.5)"
+                            strokeWidth="2"
+                            transform={`rotate(${i * 30} 50 50)`}
+                          />
+                        ))}
+                        {/* 時針 */}
+                        <line
+                          x1="50"
+                          y1="50"
+                          x2="50"
+                          y2="25"
+                          stroke="rgba(255,255,255,0.8)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          transform={`rotate(${hourDegrees} 50 50)`}
+                        />
+                        {/* 分針 */}
+                        <line
+                          x1="50"
+                          y1="50"
+                          x2="50"
+                          y2="15"
+                          stroke="rgba(255,255,255,0.9)"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          transform={`rotate(${minuteDegrees} 50 50)`}
+                        />
+                        {/* 秒針 */}
+                        <line
+                          x1="50"
+                          y1="50"
+                          x2="50"
+                          y2="10"
+                          stroke="#ef4444"
+                          strokeWidth="1"
+                          strokeLinecap="round"
+                          transform={`rotate(${secondDegrees} 50 50)`}
+                        />
+                        {/* 中心点 */}
+                        <circle cx="50" cy="50" r="3" fill="rgba(255,255,255,0.9)"/>
+                      </svg>
                     </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <Button 
-                    onClick={handleClockIn}
-                    className="relative group w-full h-12 text-sm font-bold overflow-hidden rounded-xl transition-all duration-300"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-700 to-slate-800 transition-all duration-300 group-hover:from-slate-600 group-hover:to-slate-700"></div>
-                    <div className="relative flex items-center justify-center gap-2 text-white">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                      </svg>
-                      出勤
-                    </div>
-                  </Button>
-                  <Button 
-                    onClick={handleClockOut}
-                    className="relative group w-full h-12 text-sm font-bold overflow-hidden rounded-xl transition-all duration-300"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 transition-all duration-300 group-hover:from-slate-500 group-hover:to-slate-600"></div>
-                    <div className="relative flex items-center justify-center gap-2 text-white">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      退勤
-                    </div>
-                  </Button>
-                </div>
-                
-                <div className="md:col-span-2 flex items-center gap-3">
-                  <label className="text-xs font-medium text-gray-300 whitespace-nowrap">コメント:</label>
-                  <Textarea
-                    placeholder="打刻時間の打ち忘れ"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="resize-none bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm h-12 py-3 rounded-xl backdrop-blur-sm"
-                    rows={1}
-                  />
+                <div className="md:col-span-3 flex gap-3 items-center">
+                  <div className="grid grid-cols-2 gap-3 flex-grow-0" style={{ minWidth: '280px' }}>
+                    <Button 
+                      onClick={handleClockIn}
+                      className="relative group w-full h-16 text-base font-bold overflow-hidden rounded-xl transition-all duration-300"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-slate-700 to-slate-800 transition-all duration-300 group-hover:from-slate-600 group-hover:to-slate-700"></div>
+                      <div className="relative flex items-center justify-center gap-2 text-white">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        出勤
+                      </div>
+                    </Button>
+                    <Button 
+                      onClick={handleClockOut}
+                      className="relative group w-full h-16 text-base font-bold overflow-hidden rounded-xl transition-all duration-300"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 transition-all duration-300 group-hover:from-slate-500 group-hover:to-slate-600"></div>
+                      <div className="relative flex items-center justify-center gap-2 text-white">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        退勤
+                      </div>
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 flex-grow">
+                    <label className="text-xs font-medium text-gray-300 whitespace-nowrap">コメント:</label>
+                    <Textarea
+                      placeholder="打刻時間の打ち忘れ"
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      className="resize-none bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-xs h-10 py-2 rounded-xl backdrop-blur-sm w-full"
+                      rows={1}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
             
             {/* グラフヘッダー */}
             <CardHeader className="py-4 px-6 bg-gradient-to-r from-slate-700/20 to-slate-600/20 backdrop-blur-sm border-b border-white/10">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-bold flex items-center gap-3 text-white">
-                  <div className="p-2 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  勤務時間推移
-                </CardTitle>
-                <CardDescription className="text-sm text-gray-300">
-                  日別の勤務時間を表示しています
-                </CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold text-white">
+                    勤務時間推移
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-300 mt-0.5">
+                    日別の勤務時間を表示しています
+                  </CardDescription>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-4">
