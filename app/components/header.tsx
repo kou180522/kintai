@@ -1,11 +1,14 @@
 import { Link } from "react-router";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Header() {
   return (
-    <header className="bg-gray-900 border-b border-gray-800">
+    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-all duration-500 ease-in-out relative z-50">
       <div className="h-16 flex items-center justify-between px-6 relative">
-        {/* 左側の空白スペース */}
-        <div className="flex-1"></div>
+        {/* 左側のテーマ切り替えボタン */}
+        <div className="flex-1">
+          <ThemeToggle />
+        </div>
         
         {/* 中央のロゴ */}
         <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-3">
@@ -20,8 +23,8 @@ export function Header() {
             className="relative group"
           >
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg opacity-70 group-hover:opacity-100 blur transition duration-300 group-hover:duration-200 animate-pulse"></div>
-            <div className="relative flex items-center gap-2 px-6 py-2.5 bg-gray-900 rounded-lg leading-none">
-              <span className="text-sm font-medium text-gray-200 group-hover:text-white transition duration-200">
+            <div className="relative flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition duration-200">
                 履歴
               </span>
               <div className="relative w-5 h-5">
