@@ -201,7 +201,7 @@ export function Dashboard() {
                   </div>
                 </div>
                 
-                <div className="md:col-span-3 flex gap-2 items-center">
+                <div className="md:col-span-3 flex gap-3 items-center">
                   <div className="grid grid-cols-2 gap-2 flex-grow-0" style={{ minWidth: '240px' }}>
                     <Button 
                       onClick={handleClockIn}
@@ -229,15 +229,27 @@ export function Dashboard() {
                     </Button>
                   </div>
                   
-                  <div className="flex items-center gap-2 flex-grow">
-                    <label className="text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">コメント:</label>
+                  <div className="flex items-center gap-2 flex-1">
                     <Textarea
-                      placeholder="打刻時間の打ち忘れ"
+                      placeholder="コメント"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-xs h-8 py-1.5 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
+                      className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-12 py-3 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
                       rows={1}
                     />
+                    
+                    <Button 
+                      onClick={() => console.log("編集申請")}
+                      className="relative group h-12 px-6 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300 whitespace-nowrap"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-slate-600 dark:to-slate-700 transition-all duration-300 group-hover:from-gray-500 group-hover:to-gray-600 dark:group-hover:from-slate-500 dark:group-hover:to-slate-600"></div>
+                      <div className="relative flex items-center justify-center gap-2 text-white">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        編集申請
+                      </div>
+                    </Button>
                   </div>
                 </div>
               </div>
