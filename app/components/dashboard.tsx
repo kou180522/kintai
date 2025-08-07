@@ -14,7 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "~/components/ui/chart"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Label } from "recharts"
 
 const chartData = [
   { date: "2025-01-01", 田中: null, 佐藤: null, 山田: null },
@@ -72,7 +72,7 @@ export function Dashboard() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date())
-    }, 1000)
+    }, 100) // 100msごとに更新してスムーズな動きを実現
 
     return () => clearInterval(timer)
   }, [])
@@ -111,10 +111,14 @@ export function Dashboard() {
   const hours = currentTime.getHours() % 12
   const minutes = currentTime.getMinutes()
   const seconds = currentTime.getSeconds()
+  const milliseconds = currentTime.getMilliseconds()
   
-  const hourDegrees = (hours * 30) + (minutes * 0.5)
-  const minuteDegrees = minutes * 6
-  const secondDegrees = seconds * 6
+  // 時針: 1時間=30度、1分=0.5度
+  const hourDegrees = (hours * 30) + (minutes * 0.5) + (seconds * 0.00833)
+  // 分針: 1分=6度、1秒=0.1度
+  const minuteDegrees = (minutes * 6) + (seconds * 0.1)
+  // 秒針: 1秒=6度、ミリ秒も考慮してスムーズに
+  const secondDegrees = (seconds * 6) + (milliseconds * 0.006)
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500 ease-in-out">
@@ -122,7 +126,7 @@ export function Dashboard() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(120,119,198,0.3),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_80%,rgba(100,100,120,0.3),transparent_50%)]"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(120,119,198,0.3),transparent_50%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(100,100,120,0.3),transparent_50%)]"></div>
         </div>
-      <div className="container mx-auto p-2 relative z-10 h-[calc(100vh-64px)]">
+      <div className="w-full px-2 py-2 relative z-10 h-[calc(100vh-64px)]">
         <div className="flex flex-col gap-0 h-full">
           {/* 統合カード */}
           <Card className="w-full shadow-2xl border-0 bg-white/80 dark:bg-black/40 backdrop-blur-xl overflow-hidden flex flex-col h-full transition-all duration-500 ease-in-out">
@@ -165,42 +169,45 @@ export function Dashboard() {
                           />
                         ))}
                         {/* 時針 */}
-                        <line
-                          x1="50"
-                          y1="50"
-                          x2="50"
-                          y2="25"
-                          stroke="currentColor"
-                          className="text-gray-700 dark:text-white/80"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          transform={`rotate(${hourDegrees} 50 50)`}
-                        />
+                        <g transform={`rotate(${hourDegrees} 50 50)`}>
+                          <line
+                            x1="50"
+                            y1="50"
+                            x2="50"
+                            y2="25"
+                            stroke="#374151"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            className="dark:stroke-white/80"
+                          />
+                        </g>
                         {/* 分針 */}
-                        <line
-                          x1="50"
-                          y1="50"
-                          x2="50"
-                          y2="15"
-                          stroke="currentColor"
-                          className="text-gray-800 dark:text-white/90"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          transform={`rotate(${minuteDegrees} 50 50)`}
-                        />
+                        <g transform={`rotate(${minuteDegrees} 50 50)`}>
+                          <line
+                            x1="50"
+                            y1="50"
+                            x2="50"
+                            y2="15"
+                            stroke="#1f2937"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            className="dark:stroke-white/90"
+                          />
+                        </g>
                         {/* 秒針 */}
-                        <line
-                          x1="50"
-                          y1="50"
-                          x2="50"
-                          y2="10"
-                          stroke="#ef4444"
-                          strokeWidth="1"
-                          strokeLinecap="round"
-                          transform={`rotate(${secondDegrees} 50 50)`}
-                        />
+                        <g transform={`rotate(${secondDegrees} 50 50)`}>
+                          <line
+                            x1="50"
+                            y1="50"
+                            x2="50"
+                            y2="10"
+                            stroke="#ef4444"
+                            strokeWidth="1"
+                            strokeLinecap="round"
+                          />
+                        </g>
                         {/* 中心点 */}
-                        <circle cx="50" cy="50" r="3" fill="currentColor" className="text-gray-800 dark:text-white/90"/>
+                        <circle cx="50" cy="50" r="3" fill="#374151" className="dark:fill-white/90"/>
                       </svg>
                     </div>
                   </div>
@@ -282,41 +289,47 @@ export function Dashboard() {
                     </svg>
                   </div>
                   <div>
-                    <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
+                    <CardTitle className="text-base font-bold text-gray-900 dark:text-white">
                       勤務時間推移
                     </CardTitle>
-                    <CardDescription className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+                    <CardDescription className="text-xs text-gray-600 dark:text-gray-300">
                       日別の勤務時間を表示しています
                     </CardDescription>
                   </div>
                 </div>
                 
                 {/* 累計時間表示（中央） */}
-                <div className="flex gap-4 justify-center">
-                  <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200/50 dark:border-white/10 transition-all duration-300">
-                    <div className="text-xs text-gray-600 dark:text-gray-400 font-medium text-center">今日累計</div>
-                    <div className="text-xl font-bold text-gray-900 dark:text-white">0:00</div>
+                <div className="flex gap-3 justify-center">
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-blue-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
+                    <div className="relative bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg px-4 py-1.5 border border-blue-200/50 dark:border-blue-400/30 transition-all duration-300">
+                      <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold text-center">今日累計</div>
+                      <div className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">0:00</div>
+                    </div>
                   </div>
-                  <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200/50 dark:border-white/10 transition-all duration-300">
-                    <div className="text-xs text-gray-600 dark:text-gray-400 font-medium text-center">今月累計</div>
-                    <div className="text-xl font-bold text-gray-900 dark:text-white">0:00</div>
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
+                    <div className="relative bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg px-4 py-1.5 border border-purple-200/50 dark:border-purple-400/30 transition-all duration-300">
+                      <div className="text-xs text-purple-600 dark:text-purple-400 font-semibold text-center">今月累計</div>
+                      <div className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-400 dark:to-purple-500 bg-clip-text text-transparent">0:00</div>
+                    </div>
                   </div>
                 </div>
                 
                 <div></div> {/* 右側の空きスペース */}
               </div>
             </CardHeader>
-            <CardContent className="p-2 flex-1 overflow-hidden">
-              <div className="w-full h-full overflow-x-auto">
-                <ChartContainer config={chartConfig} className="h-full" style={{ minWidth: '1200px', minHeight: '300px' }}>
+            <CardContent className="p-1 flex-1 overflow-hidden">
+              <div className="w-full h-full">
+                <ChartContainer config={chartConfig} className="h-full" style={{ minWidth: '100%' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={chartData}
                       margin={{
                         top: 10,
-                        right: 20,
-                        left: 20,
-                        bottom: 40,
+                        right: 5,
+                        left: 25,
+                        bottom: 45,
                       }}
                     >
                       <defs>
@@ -333,35 +346,37 @@ export function Dashboard() {
                       <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-200 dark:text-white/10" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-300 dark:text-white/20" strokeOpacity={0.8} />
                       <XAxis
                         dataKey="date"
-                        stroke="currentColor"
-                        className="text-gray-400 dark:text-white/50"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
+                        stroke="#6b7280"
+                        className="dark:stroke-gray-400"
+                        tickLine={true}
+                        axisLine={true}
+                        tickMargin={4}
                         tickFormatter={(value) => {
                           const date = new Date(value);
                           return `${date.getDate()}`;
                         }}
                         interval={0}
-                        angle={0}
-                        textAnchor="middle"
-                        tick={{ fontSize: 10 }}
-                        label={{ value: 'Date', position: 'insideBottom', offset: -5, style: { fontSize: 11 } }}
-                      />
+                        angle={-90}
+                        textAnchor="end"
+                        tick={{ fontSize: 9 }}
+                      >
+                        <Label value="Date" position="insideBottom" offset={-25} style={{ fontSize: 12, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
+                      </XAxis>
                       <YAxis
-                        stroke="currentColor"
-                        className="text-gray-400 dark:text-white/50"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                        label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: { fontSize: 11 } }}
+                        stroke="#6b7280"
+                        className="dark:stroke-gray-400"
+                        tickLine={true}
+                        axisLine={true}
+                        tickMargin={4}
                         domain={[0, 12]}
                         ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
-                        tick={{ fontSize: 10 }}
-                      />
+                        tick={{ fontSize: 9 }}
+                      >
+                        <Label value="Hours" angle={-90} position="insideLeft" style={{ fontSize: 12, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
+                      </YAxis>
                       <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent />}
@@ -370,8 +385,8 @@ export function Dashboard() {
                         type="monotone"
                         dataKey="田中"
                         stroke="#3B82F6"
-                        strokeWidth={3}
-                        dot={{ r: 5, fill: "#3B82F6", strokeWidth: 2, stroke: "white" }}
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: "#3B82F6", strokeWidth: 1, stroke: "white" }}
                         connectNulls={true}
                         activeDot={{ r: 7, strokeWidth: 0 }}
                       />
@@ -379,8 +394,8 @@ export function Dashboard() {
                         type="monotone"
                         dataKey="佐藤"
                         stroke="#10B981"
-                        strokeWidth={3}
-                        dot={{ r: 5, fill: "#10B981", strokeWidth: 2, stroke: "white" }}
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: "#10B981", strokeWidth: 1, stroke: "white" }}
                         connectNulls={true}
                         activeDot={{ r: 7, strokeWidth: 0 }}
                       />
@@ -388,8 +403,8 @@ export function Dashboard() {
                         type="monotone"
                         dataKey="山田"
                         stroke="#F59E0B"
-                        strokeWidth={3}
-                        dot={{ r: 5, fill: "#F59E0B", strokeWidth: 2, stroke: "white" }}
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: "#F59E0B", strokeWidth: 1, stroke: "white" }}
                         connectNulls={true}
                         activeDot={{ r: 7, strokeWidth: 0 }}
                       />
