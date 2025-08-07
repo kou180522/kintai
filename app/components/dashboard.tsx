@@ -102,6 +102,11 @@ export function Dashboard() {
     console.log("退勤打刻:", formatTime(currentTime), "コメント:", comment)
   }
 
+  const handleCommentSubmit = () => {
+    console.log("コメント送信:", comment)
+    setComment("") // 送信後にコメントをクリア
+  }
+
   // アナログ時計用の計算
   const hours = currentTime.getHours() % 12
   const minutes = currentTime.getMinutes()
@@ -230,13 +235,25 @@ export function Dashboard() {
                   </div>
                   
                   <div className="flex items-center gap-2 flex-1">
-                    <Textarea
-                      placeholder="コメント"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-12 py-3 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
-                      rows={1}
-                    />
+                    <div className="relative flex-1">
+                      <Textarea
+                        placeholder="コメント"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-12 py-3 pr-12 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
+                        rows={1}
+                      />
+                      <Button
+                        onClick={handleCommentSubmit}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"
+                        variant="ghost"
+                        size="sm"
+                      >
+                        <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      </Button>
+                    </div>
                     
                     <Button 
                       onClick={() => console.log("編集申請")}
