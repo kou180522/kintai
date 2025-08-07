@@ -274,7 +274,7 @@ export function Dashboard() {
             
             {/* グラフヘッダー */}
             <CardHeader className="py-2 px-4 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
-              <div className="flex items-center justify-between">
+              <div className="grid grid-cols-3 items-center">
                 <div className="flex items-center gap-3">
                   <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-lg transition-colors duration-300">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,6 +290,20 @@ export function Dashboard() {
                     </CardDescription>
                   </div>
                 </div>
+                
+                {/* 累計時間表示（中央） */}
+                <div className="flex gap-4 justify-center">
+                  <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200/50 dark:border-white/10 transition-all duration-300">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 font-medium text-center">今日累計</div>
+                    <div className="text-xl font-bold text-gray-900 dark:text-white">0:00</div>
+                  </div>
+                  <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200/50 dark:border-white/10 transition-all duration-300">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 font-medium text-center">今月累計</div>
+                    <div className="text-xl font-bold text-gray-900 dark:text-white">0:00</div>
+                  </div>
+                </div>
+                
+                <div></div> {/* 右側の空きスペース */}
               </div>
             </CardHeader>
             <CardContent className="p-2 flex-1 overflow-hidden">
