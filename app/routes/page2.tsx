@@ -12,7 +12,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "~/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Label } from "recharts";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -97,30 +97,32 @@ export default function Page2() {
                         <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-200 dark:text-white/10" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-300 dark:text-white/20" strokeOpacity={0.8} />
                     <XAxis
                       dataKey="month"
-                      stroke="currentColor"
-                      className="text-gray-400 dark:text-white/50"
-                      tickLine={false}
-                      axisLine={false}
+                      stroke="#6b7280"
+                      className="dark:stroke-gray-400"
+                      tickLine={true}
+                      axisLine={true}
                       tickMargin={8}
                       angle={-45}
                       textAnchor="end"
                       tick={{ fontSize: 11 }}
-                      label={{ value: 'Month', position: 'insideBottom', offset: -40, style: { fontSize: 12, textAnchor: 'middle' } }}
-                    />
+                    >
+                      <Label value="Month" position="insideBottom" offset={-40} style={{ fontSize: 13, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
+                    </XAxis>
                     <YAxis
-                      stroke="currentColor"
-                      className="text-gray-400 dark:text-white/50"
-                      tickLine={false}
-                      axisLine={false}
+                      stroke="#6b7280"
+                      className="dark:stroke-gray-400"
+                      tickLine={true}
+                      axisLine={true}
                       tickMargin={8}
-                      label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: { fontSize: 12, textAnchor: 'middle' } }}
                       domain={[0, 200]}
                       ticks={[0, 50, 100, 150, 200]}
                       tick={{ fontSize: 11 }}
-                    />
+                    >
+                      <Label value="Hours" angle={-90} position="insideLeft" style={{ fontSize: 13, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
+                    </YAxis>
                     <ChartTooltip
                       cursor={false}
                       content={<ChartTooltipContent />}
