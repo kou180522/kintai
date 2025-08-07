@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   Card,
@@ -114,27 +112,27 @@ export function Dashboard() {
   const secondDegrees = seconds * 6
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500 ease-in-out">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(100,100,120,0.3),transparent_50%)]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(100,100,120,0.3),transparent_50%)]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(120,119,198,0.3),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_80%,rgba(100,100,120,0.3),transparent_50%)]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(120,119,198,0.3),transparent_50%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(100,100,120,0.3),transparent_50%)]"></div>
         </div>
-      <div className="container mx-auto p-4 relative z-10">
-        <div className="flex flex-col gap-0">
+      <div className="container mx-auto p-2 relative z-10 h-[calc(100vh-64px)]">
+        <div className="flex flex-col gap-0 h-full">
           {/* 統合カード */}
-          <Card className="w-full shadow-2xl border-0 bg-black/40 backdrop-blur-xl overflow-hidden">
+          <Card className="w-full shadow-2xl border-0 bg-white/80 dark:bg-black/40 backdrop-blur-xl overflow-hidden flex flex-col h-full transition-all duration-500 ease-in-out">
             {/* 打刻セクション */}
-            <div className="bg-gradient-to-r from-slate-700/30 to-slate-600/30 backdrop-blur-sm p-4 border-b border-white/10">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <div className="bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/30 dark:to-slate-600/30 backdrop-blur-sm p-2 border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
                 <div className="flex gap-3 items-center justify-center">
                   {/* デジタル時計 */}
                   <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                    <div className="relative text-center space-y-1 bg-black/50 backdrop-blur-md rounded-xl py-3 px-4 border border-white/20">
-                      <div className="text-xs font-medium text-gray-300">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 dark:from-slate-600 dark:to-slate-700 rounded-xl blur-xl opacity-30 group-hover:opacity-50 transition-all duration-300"></div>
+                    <div className="relative text-center space-y-0.5 bg-white/70 dark:bg-black/50 backdrop-blur-md rounded-lg py-2 px-3 border border-gray-300/50 dark:border-white/20 transition-all duration-500 ease-in-out">
+                      <div className="text-xs font-medium text-gray-600 dark:text-gray-300">
                         {formatDate(currentTime)}
                       </div>
-                      <div className="text-2xl font-bold tracking-wider text-white">
+                      <div className="text-xl font-bold tracking-wider text-gray-900 dark:text-white">
                         {formatTime(currentTime)}
                       </div>
                     </div>
@@ -143,10 +141,10 @@ export function Dashboard() {
                   {/* アナログ時計 */}
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                    <div className="relative w-24 h-24 bg-black/50 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center">
-                      <svg className="w-20 h-20" viewBox="0 0 100 100">
+                    <div className="relative w-20 h-20 bg-white/70 dark:bg-black/50 backdrop-blur-md rounded-full border border-gray-300/50 dark:border-white/20 flex items-center justify-center transition-all duration-500 ease-in-out">
+                      <svg className="w-16 h-16" viewBox="0 0 100 100">
                         {/* 時計の文字盤 */}
-                        <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2"/>
+                        <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" className="text-gray-300 dark:text-white/20" strokeWidth="2"/>
                         {/* 時間のマーカー */}
                         {[...Array(12)].map((_, i) => (
                           <line
@@ -155,7 +153,8 @@ export function Dashboard() {
                             y1="5"
                             x2="50"
                             y2="10"
-                            stroke="rgba(255,255,255,0.5)"
+                            stroke="currentColor"
+                            className="text-gray-400 dark:text-white/50"
                             strokeWidth="2"
                             transform={`rotate(${i * 30} 50 50)`}
                           />
@@ -166,7 +165,8 @@ export function Dashboard() {
                           y1="50"
                           x2="50"
                           y2="25"
-                          stroke="rgba(255,255,255,0.8)"
+                          stroke="currentColor"
+                          className="text-gray-700 dark:text-white/80"
                           strokeWidth="3"
                           strokeLinecap="round"
                           transform={`rotate(${hourDegrees} 50 50)`}
@@ -177,7 +177,8 @@ export function Dashboard() {
                           y1="50"
                           x2="50"
                           y2="15"
-                          stroke="rgba(255,255,255,0.9)"
+                          stroke="currentColor"
+                          className="text-gray-800 dark:text-white/90"
                           strokeWidth="2"
                           strokeLinecap="round"
                           transform={`rotate(${minuteDegrees} 50 50)`}
@@ -194,21 +195,21 @@ export function Dashboard() {
                           transform={`rotate(${secondDegrees} 50 50)`}
                         />
                         {/* 中心点 */}
-                        <circle cx="50" cy="50" r="3" fill="rgba(255,255,255,0.9)"/>
+                        <circle cx="50" cy="50" r="3" fill="currentColor" className="text-gray-800 dark:text-white/90"/>
                       </svg>
                     </div>
                   </div>
                 </div>
                 
-                <div className="md:col-span-3 flex gap-3 items-center">
-                  <div className="grid grid-cols-2 gap-3 flex-grow-0" style={{ minWidth: '280px' }}>
+                <div className="md:col-span-3 flex gap-2 items-center">
+                  <div className="grid grid-cols-2 gap-2 flex-grow-0" style={{ minWidth: '240px' }}>
                     <Button 
                       onClick={handleClockIn}
-                      className="relative group w-full h-16 text-base font-bold overflow-hidden rounded-xl transition-all duration-300"
+                      className="relative group w-full h-12 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-slate-700 to-slate-800 transition-all duration-300 group-hover:from-slate-600 group-hover:to-slate-700"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-slate-700 dark:to-slate-800 transition-all duration-300 group-hover:from-blue-600 group-hover:to-blue-700 dark:group-hover:from-slate-600 dark:group-hover:to-slate-700"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                         </svg>
                         出勤
@@ -216,11 +217,11 @@ export function Dashboard() {
                     </Button>
                     <Button 
                       onClick={handleClockOut}
-                      className="relative group w-full h-16 text-base font-bold overflow-hidden rounded-xl transition-all duration-300"
+                      className="relative group w-full h-12 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 transition-all duration-300 group-hover:from-slate-500 group-hover:to-slate-600"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 dark:from-slate-600 dark:to-slate-700 transition-all duration-300 group-hover:from-red-600 group-hover:to-red-700 dark:group-hover:from-slate-500 dark:group-hover:to-slate-600"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                         退勤
@@ -229,12 +230,12 @@ export function Dashboard() {
                   </div>
                   
                   <div className="flex items-center gap-2 flex-grow">
-                    <label className="text-xs font-medium text-gray-300 whitespace-nowrap">コメント:</label>
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">コメント:</label>
                     <Textarea
                       placeholder="打刻時間の打ち忘れ"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      className="resize-none bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-xs h-10 py-2 rounded-xl backdrop-blur-sm w-full"
+                      className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-xs h-8 py-1.5 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
                       rows={1}
                     />
                   </div>
@@ -243,36 +244,36 @@ export function Dashboard() {
             </div>
             
             {/* グラフヘッダー */}
-            <CardHeader className="py-4 px-6 bg-gradient-to-r from-slate-700/20 to-slate-600/20 backdrop-blur-sm border-b border-white/10">
+            <CardHeader className="py-2 px-4 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-lg transition-colors duration-300">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-bold text-white">
+                    <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
                       勤務時間推移
                     </CardTitle>
-                    <CardDescription className="text-sm text-gray-300 mt-0.5">
+                    <CardDescription className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
                       日別の勤務時間を表示しています
                     </CardDescription>
                   </div>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-4">
-              <div className="w-full overflow-x-auto">
-                <ChartContainer config={chartConfig} className="h-[calc(100vh-280px)]" style={{ minWidth: '1400px', minHeight: '400px' }}>
+            <CardContent className="p-2 flex-1 overflow-hidden">
+              <div className="w-full h-full overflow-x-auto">
+                <ChartContainer config={chartConfig} className="h-full" style={{ minWidth: '1200px', minHeight: '300px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={chartData}
                       margin={{
-                        top: 20,
-                        right: 30,
-                        left: 30,
-                        bottom: 60,
+                        top: 10,
+                        right: 20,
+                        left: 20,
+                        bottom: 40,
                       }}
                     >
                       <defs>
@@ -289,10 +290,11 @@ export function Dashboard() {
                       <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-200 dark:text-white/10" />
                       <XAxis
                         dataKey="date"
-                        stroke="rgba(255,255,255,0.5)"
+                        stroke="currentColor"
+                        className="text-gray-400 dark:text-white/50"
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
@@ -303,18 +305,19 @@ export function Dashboard() {
                         interval={0}
                         angle={0}
                         textAnchor="middle"
-                        tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.7)' }}
-                        label={{ value: 'Date', position: 'insideBottom', offset: -5, style: { fill: 'rgba(255,255,255,0.7)' } }}
+                        tick={{ fontSize: 10 }}
+                        label={{ value: 'Date', position: 'insideBottom', offset: -5, style: { fontSize: 11 } }}
                       />
                       <YAxis
-                        stroke="rgba(255,255,255,0.5)"
+                        stroke="currentColor"
+                        className="text-gray-400 dark:text-white/50"
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
-                        label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: { fill: 'rgba(255,255,255,0.7)' } }}
+                        label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: { fontSize: 11 } }}
                         domain={[0, 12]}
                         ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
-                        tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.7)' }}
+                        tick={{ fontSize: 10 }}
                       />
                       <ChartTooltip
                         cursor={false}
@@ -325,7 +328,7 @@ export function Dashboard() {
                         dataKey="田中"
                         stroke="#3B82F6"
                         strokeWidth={3}
-                        dot={{ r: 5, fill: "#3B82F6", strokeWidth: 2, stroke: "rgba(255,255,255,0.8)" }}
+                        dot={{ r: 5, fill: "#3B82F6", strokeWidth: 2, stroke: "white" }}
                         connectNulls={true}
                         activeDot={{ r: 7, strokeWidth: 0 }}
                       />
@@ -334,7 +337,7 @@ export function Dashboard() {
                         dataKey="佐藤"
                         stroke="#10B981"
                         strokeWidth={3}
-                        dot={{ r: 5, fill: "#10B981", strokeWidth: 2, stroke: "rgba(255,255,255,0.8)" }}
+                        dot={{ r: 5, fill: "#10B981", strokeWidth: 2, stroke: "white" }}
                         connectNulls={true}
                         activeDot={{ r: 7, strokeWidth: 0 }}
                       />
@@ -343,7 +346,7 @@ export function Dashboard() {
                         dataKey="山田"
                         stroke="#F59E0B"
                         strokeWidth={3}
-                        dot={{ r: 5, fill: "#F59E0B", strokeWidth: 2, stroke: "rgba(255,255,255,0.8)" }}
+                        dot={{ r: 5, fill: "#F59E0B", strokeWidth: 2, stroke: "white" }}
                         connectNulls={true}
                         activeDot={{ r: 7, strokeWidth: 0 }}
                       />
