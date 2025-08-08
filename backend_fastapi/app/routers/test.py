@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any
 import csv
 import io
 import os
+from app.services.csv_loader import csv_loader
 
 router = APIRouter()
 
@@ -25,68 +26,68 @@ class TestResponse(BaseModel):
 @router.get("/")
 async def get_test():
     """
-    テストAPIエンドポイント - CSVファイルからユーザー情報を読み込んで返す
+    テストAPIエンドポイント - ユーザー情報と稼働時間データを返す
     """
-    csv_file_path = "attendance_data.csv"
-    
     try:
-        # CSVファイルを読み込み
-        if os.path.exists(csv_file_path):
-            with open(csv_file_path, 'r', encoding='utf-8') as file:
-                csv_content = file.read()
-                csv_reader = csv.DictReader(io.StringIO(csv_content))
-                
-                # 勤怠データから一意のユーザーを抽出
-                unique_users = {}
-                total_records = 0
-                
-                for row in csv_reader:
-                    total_records += 1
-                    user_name = row.get('ユーザー', row.get('user', row.get('名前', '')))
-                    
-                    # ユーザー名が存在する場合、ユーザー情報を記録
-                    if user_name and user_name.strip():
-                        if user_name not in unique_users:
-                            # ユーザー名から仮のIDを生成
-                            user_id = f"user_{len(unique_users) + 1:03d}"
-                            unique_users[user_name] = {
-                                "employee_id": user_id,
-                                "name": user_name,
-                                "department": "未設定",
-                                "email": f"{user_name.replace(' ', '.').lower()}@example.com",
-                                "position": "一般社員"
-                            }
-                
-                # ユーザーリストを作成
-                users_list = list(unique_users.values())
-                
-                return {
-                    "success": True,
-                    "message": f"テストAPI正常動作中 - CSVから{len(users_list)}人のユーザー情報を取得",
-                    "method": "GET",
-                    "timestamp": datetime.now().isoformat(),
-                    "data": {
-                        "users": users_list[:5],  # 最初の5人のみ表示
-                        "total_users": len(users_list),
-                        "total_records": total_records,
-                        "csv_file": csv_file_path
-                    },
-                    "serverTime": datetime.now().isoformat(),
-                    "processedBy": "FastAPI バックエンドサーバー"
-                }
-        else:
-            # CSVファイルが存在しない場合
-            return {
-                "success": True,
-                "message": "テストAPIエンドポイントは正常に動作しています（CSVファイルなし）",
-                "method": "GET",
-                "timestamp": datetime.now().isoformat(),
-                "data": {
-                    "users": [],
-                    "total_users": 0,
-                    "note": "CSVファイルが見つかりません"
-                }
-            }
+        # ユーザー情報を取得
+        users = csv_loader.get_users()
+        attendance_records = csv_loader.get_attendance_records()
+        
+        # ユーザーごとの時間データを取得
+        user_time_data = csv_loader.get_user_time_data()
+        
+        # 全ユーザーの時間データを稼働時間でソート
+        sorted_time_data = sorted(
+            user_time_data.items(),
+            key=lambda x: x[1]["total_hours"] * 60 + x[1]["total_minutes"],
+            reverse=True
+        )
+        
+        # 全ユーザーの時間データを作成（日別・月別データも含む）
+        time_summary = []
+        for user_name, data in sorted_time_data:
+            # 全員のデータを含める（稼働時間0の人も含む）
+            time_summary.append({
+                "name": user_name,
+                "total_time": data["total_time_formatted"],
+                "work_days": data["work_days"],
+                "total_hours": data["total_hours"],
+                "total_minutes": data["total_minutes"],
+                "daily_hours": data.get("daily_hours", {}),
+                "monthly_hours": data.get("monthly_hours", {})
+            })
+        
+        # 統計情報を計算
+        total_hours = sum(data["total_hours"] for data in user_time_data.values())
+        total_minutes = sum(data["total_minutes"] for data in user_time_data.values())
+        total_hours += total_minutes // 60
+        total_minutes = total_minutes % 60
+        
+        active_users = len([u for u in user_time_data.values() 
+                           if u["total_hours"] > 0 or u["total_minutes"] > 0])
+        
+        return {
+            "success": True,
+            "message": f"テストAPI正常動作中 - {len(users)}人のユーザー情報と稼働時間データを取得",
+            "method": "GET",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "users": users,  # 全ユーザー情報
+                "total_users": len(users),
+                "total_records": len(attendance_records),
+                "time_data": {
+                    "summary": time_summary,  # 全15人の稼働時間データ
+                    "statistics": {
+                        "total_work_time": f"{total_hours}時間{total_minutes}分",
+                        "active_users": active_users,
+                        "total_users": len(user_time_data)
+                    }
+                },
+                "csv_file": "attendance_data.csv"
+            },
+            "serverTime": datetime.now().isoformat(),
+            "processedBy": "FastAPI バックエンドサーバー"
+        }
             
     except Exception as e:
         return {

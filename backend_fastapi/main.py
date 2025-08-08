@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from app.routers import test, attendance, sheets, colab_api, slack, users
+from app.routers import test, attendance, sheets, colab_api, slack, users, time_data
 from app.services.csv_loader import csv_loader
 
 # .envファイルから環境変数を読み込み
@@ -50,3 +50,4 @@ app.include_router(sheets.router, prefix="/sheets", tags=["sheets"])
 app.include_router(colab_api.router, prefix="/colab", tags=["colab"])
 app.include_router(slack.router, prefix="/slack", tags=["slack"])
 app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(time_data.router, prefix="/time-data", tags=["time-data"])
