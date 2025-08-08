@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background-color: #ffcccc;
+        }
+        .success {
+            background-color: #ccffcc;
+        }
+    </style>
+</head>
+<body>
+    <h1>API テストページ</h1>
+    
+    <button onclick="testAPI()">APIテスト（ユーザー情報取得）</button>
+    <button onclick="getUserList()">ユーザー一覧取得</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = '読み込み中...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/test/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                console.log('APIレスポンス:', data);
+                
+                if (data.success && data.data && data.data.users) {
+                    const users = data.data.users;
+                    const totalUsers = data.data.total_users;
+                    const totalRecords = data.data.total_records;
+                    
+                    let userList = 'ユーザー情報:\n\n';
+                    users.forEach((user, index) => {
+                        userList += `${index + 1}. ${user.name}\n`;
+                        userList += `   ID: ${user.employee_id}\n`;
+                        userList += `   メール: ${user.email}\n`;
+                        userList += `   部署: ${user.department}\n`;
+                        userList += `   役職: ${user.position}\n\n`;
+                    });
+                    
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = `✅ APIテスト成功！\n\n` +
+                        `CSVファイルから${totalUsers}人のユーザー情報を取得しました。\n` +
+                        `勤怠レコード数: ${totalRecords}件\n\n` +
+                        userList +
+                        `（最初の5人を表示）`;
+                } else {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = `APIテスト成功！\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                console.error('APIエラー:', error);
+                resultDiv.className = 'error';
+                resultDiv.textContent = `❌ APIテスト失敗: ${error}`;
+            }
+        }
+        
+        async function getUserList() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = '読み込み中...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/users/list', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                console.log('ユーザー一覧:', data);
+                
+                if (data.success && data.data) {
+                    let userList = `ユーザー一覧（全${data.total_count}人）:\n\n`;
+                    data.data.forEach((user, index) => {
+                        userList += `${index + 1}. ${user.name}\n`;
+                        userList += `   ID: ${user.employee_id}\n`;
+                        userList += `   メール: ${user.email}\n`;
+                        userList += `   部署: ${user.department}\n`;
+                        userList += `   役職: ${user.position}\n\n`;
+                    });
+                    
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = userList;
+                }
+            } catch (error) {
+                console.error('APIエラー:', error);
+                resultDiv.className = 'error';
+                resultDiv.textContent = `❌ エラー: ${error}`;
+            }
+        }
+    </script>
+</body>
+</html>

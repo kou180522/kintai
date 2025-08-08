@@ -94,12 +94,52 @@ export function Dashboard() {
     })
   }
 
-  const handleClockIn = () => {
-    console.log("出勤打刻:", formatTime(currentTime), "コメント:", comment)
+  const handleClockIn = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/attendance/clock-in`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timestamp: currentTime.toISOString(),
+          comment: comment
+        }),
+      });
+      
+      const data = await response.json();
+      console.log("出勤打刻:", formatTime(currentTime), "コメント:", comment);
+      alert('出勤打刻が完了しました');
+      setComment('');
+    } catch (error) {
+      console.error('出勤打刻エラー:', error);
+      alert('出勤打刻に失敗しました');
+    }
   }
 
-  const handleClockOut = () => {
-    console.log("退勤打刻:", formatTime(currentTime), "コメント:", comment)
+  const handleClockOut = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/attendance/clock-out`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timestamp: currentTime.toISOString(),
+          comment: comment
+        }),
+      });
+      
+      const data = await response.json();
+      console.log("退勤打刻:", formatTime(currentTime), "コメント:", comment);
+      alert('退勤打刻が完了しました');
+      setComment('');
+    } catch (error) {
+      console.error('退勤打刻エラー:', error);
+      alert('退勤打刻に失敗しました');
+    }
   }
 
   const handleCommentSubmit = () => {
@@ -109,24 +149,56 @@ export function Dashboard() {
 
   const handleApiTest = async () => {
     try {
-      // テスト用のAPIエンドポイントを呼び出す
-      const response = await fetch('/api/test', {
-        method: 'POST',
+      // バックエンドのテスト用APIエンドポイントを呼び出す（GETメソッドに変更）
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const fullUrl = `${apiUrl}/test/`;
+      
+      console.log('API呼び出し開始:', fullUrl);
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          timestamp: new Date().toISOString(),
-          message: 'テストAPIの呼び出し',
-        }),
       })
       
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json()
-      console.log('APIレスポンス:', data)
-      alert(`APIテスト成功！\nレスポンス: ${JSON.stringify(data, null, 2)}`)
+      console.log('APIレスポンス成功:', data)
+      
+      // ユーザー情報を整形して表示
+      if (data.success && data.data && data.data.users) {
+        const users = data.data.users;
+        const totalUsers = data.data.total_users;
+        const totalRecords = data.data.total_records;
+        
+        let userList = 'ユーザー情報:\n';
+        users.forEach((user, index) => {
+          userList += `\n${index + 1}. ${user.name}\n`;
+          userList += `   ID: ${user.employee_id}\n`;
+          userList += `   メール: ${user.email}\n`;
+          userList += `   部署: ${user.department}\n`;
+          userList += `   役職: ${user.position}\n`;
+        });
+        
+        alert(`✅ APIテスト成功！\n\n` +
+              `CSVファイルから${totalUsers}人のユーザー情報を取得しました。\n` +
+              `勤怠レコード数: ${totalRecords}件\n\n` +
+              `${userList}\n` +
+              `（最初の5人を表示）`);
+      } else {
+        alert(`APIテスト成功！\nレスポンス: ${JSON.stringify(data, null, 2)}`)
+      }
     } catch (error) {
-      console.error('APIエラー:', error)
-      alert(`APIテスト失敗: ${error}`)
+      console.error('APIエラー詳細:', error)
+      if (error instanceof Error) {
+        alert(`APIテスト失敗: ${error.message}\n\n詳細はブラウザのコンソールを確認してください。`)
+      } else {
+        alert(`APIテスト失敗: ${error}`)
+      }
     }
   }
 
