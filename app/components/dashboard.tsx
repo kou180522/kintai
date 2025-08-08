@@ -264,7 +264,7 @@ export function Dashboard() {
                   <div className="flex items-center gap-2 flex-1">
                     <div className="relative flex-1">
                       <Textarea
-                        placeholder="コメント"
+                        placeholder="コメント入力"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-10 py-2.5 pr-12 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
