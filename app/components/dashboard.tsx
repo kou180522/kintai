@@ -169,26 +169,84 @@ export function Dashboard() {
       const data = await response.json()
       console.log('APIレスポンス成功:', data)
       
-      // ユーザー情報を整形して表示
-      if (data.success && data.data && data.data.users) {
-        const users = data.data.users;
-        const totalUsers = data.data.total_users;
-        const totalRecords = data.data.total_records;
+      // ユーザー情報と稼働時間を整形して表示
+      if (data.success && data.data) {
+        const users = data.data.users || [];
+        const totalUsers = data.data.total_users || 0;
+        const totalRecords = data.data.total_records || 0;
+        const timeData = data.data.time_data;
         
-        let userList = 'ユーザー情報:\n';
-        users.forEach((user, index) => {
-          userList += `\n${index + 1}. ${user.name}\n`;
-          userList += `   ID: ${user.employee_id}\n`;
-          userList += `   メール: ${user.email}\n`;
-          userList += `   部署: ${user.department}\n`;
-          userList += `   役職: ${user.position}\n`;
-        });
+        let message = `✅ APIテスト成功！\n\n`;
+        message += `📊 データ概要\n`;
+        message += `────────────────────\n`;
+        message += `ユーザー総数: ${totalUsers}人\n`;
+        message += `勤怠レコード総数: ${totalRecords}件\n`;
         
-        alert(`✅ APIテスト成功！\n\n` +
-              `CSVファイルから${totalUsers}人のユーザー情報を取得しました。\n` +
-              `勤怠レコード数: ${totalRecords}件\n\n` +
-              `${userList}\n` +
-              `（最初の5人を表示）`);
+        // 統計情報
+        if (timeData && timeData.statistics) {
+          message += `総稼働時間: ${timeData.statistics.total_work_time}\n`;
+          message += `アクティブユーザー: ${timeData.statistics.active_users}/${timeData.statistics.total_users}人\n`;
+        }
+        message += `\n`;
+        
+        // 全15人の稼働時間データ
+        if (timeData && timeData.summary && timeData.summary.length > 0) {
+          message += `⏱️ 全ユーザーの稼働時間一覧（${timeData.summary.length}人）\n`;
+          message += `════════════════════════════════\n`;
+          
+          timeData.summary.forEach((user, index) => {
+            const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${(index + 1).toString().padStart(2, ' ')}.`;
+            const timeStr = user.total_time || '0時間0分';
+            const daysStr = user.work_days > 0 ? `${user.work_days}日` : '未勤務';
+            
+            // 稼働時間がある人は強調
+            if (user.total_hours > 0 || user.total_minutes > 0) {
+              message += `${rankEmoji} ${user.name}\n`;
+              message += `    ⏰ 総計: ${timeStr} / 📅 ${daysStr}\n`;
+              
+              // 月別勤務時間を表示
+              if (user.monthly_hours && Object.keys(user.monthly_hours).length > 0) {
+                message += `    📊 月別勤務時間:\n`;
+                const sortedMonths = Object.keys(user.monthly_hours).sort().reverse();
+                sortedMonths.slice(0, 3).forEach(month => {
+                  const monthData = user.monthly_hours[month];
+                  message += `       ${month}: ${monthData.formatted} (${monthData.work_days}日)\n`;
+                });
+              }
+              
+              // 最近の日別勤務時間を表示（最新3日分）
+              if (user.daily_hours && Object.keys(user.daily_hours).length > 0) {
+                const sortedDates = Object.keys(user.daily_hours).sort().reverse();
+                if (sortedDates.length > 0) {
+                  message += `    📅 最近の勤務:\n`;
+                  sortedDates.slice(0, 3).forEach(date => {
+                    const dayData = user.daily_hours[date];
+                    message += `       ${date}: ${dayData.formatted}\n`;
+                  });
+                }
+              }
+            } else {
+              message += `${rankEmoji} ${user.name}: 稼働記録なし\n`;
+            }
+          });
+          message += `\n`;
+        }
+        
+        // 全ユーザー情報リスト
+        if (users.length > 0) {
+          message += `👥 登録ユーザー詳細（全${users.length}人）\n`;
+          message += `════════════════════════════════\n`;
+          users.forEach((user, index) => {
+            message += `${(index + 1).toString().padStart(2, ' ')}. ${user.name}\n`;
+            message += `    ID: ${user.employee_id}\n`;
+            message += `    📧 ${user.email}\n`;
+            if (user.department !== "未設定") {
+              message += `    🏢 ${user.department} / ${user.position}\n`;
+            }
+          });
+        }
+        
+        alert(message);
       } else {
         alert(`APIテスト成功！\nレスポンス: ${JSON.stringify(data, null, 2)}`)
       }

@@ -99,6 +99,206 @@ class CSVDataLoader:
                 return user
         return None
     
+    def get_user_time_data(self) -> Dict[str, Any]:
+        """各ユーザーの時間データを集計（日跨ぎ対応、s/f打刻ペアから直接計算）"""
+        user_time_data = {}
+        user_all_timestamps = {}  # ユーザー別の全タイムスタンプ（時系列順）
+        
+        # 全レコードをユーザー別に収集
+        for record in self.attendance_records:
+            user_name = record.get("user", "")
+            if not user_name:
+                continue
+                
+            date = record.get("date", "")
+            time = record.get("time", "")
+            status = record.get("status", "").lower()
+            
+            if user_name not in user_all_timestamps:
+                user_all_timestamps[user_name] = []
+            
+            # タイムスタンプを記録（開始はs/開始、終了はf/終了として統一）
+            if status in ["開始", "s", "start"]:
+                # 時刻を0埋めして正しくソートできるようにする
+                time_parts = time.split(":")
+                if len(time_parts) >= 2:
+                    formatted_time = f"{int(time_parts[0]):02d}:{int(time_parts[1]):02d}"
+                else:
+                    formatted_time = time
+                
+                user_all_timestamps[user_name].append({
+                    "date": date,
+                    "time": time,
+                    "status": "start",
+                    "datetime_str": f"{date} {formatted_time}"  # ソート用（時刻を0埋め）
+                })
+            elif status in ["終了", "f", "finish", "end"]:
+                # 時刻を0埋めして正しくソートできるようにする
+                time_parts = time.split(":")
+                if len(time_parts) >= 2:
+                    formatted_time = f"{int(time_parts[0]):02d}:{int(time_parts[1]):02d}"
+                else:
+                    formatted_time = time
+                    
+                user_all_timestamps[user_name].append({
+                    "date": date,
+                    "time": time,
+                    "status": "end",
+                    "datetime_str": f"{date} {formatted_time}"  # ソート用（時刻を0埋め）
+                })
+        
+        # 各ユーザーの勤務時間を計算（日跨ぎ対応）
+        for user_name, timestamps in user_all_timestamps.items():
+            if user_name not in user_time_data:
+                user_time_data[user_name] = {
+                    "name": user_name,
+                    "total_hours": 0,
+                    "total_minutes": 0,
+                    "work_days": 0,
+                    "records": [],
+                    "daily_hours": {},  # 日別勤務時間
+                    "monthly_hours": {}  # 月別勤務時間
+                }
+            
+            # タイムスタンプを時系列順にソート
+            sorted_timestamps = sorted(timestamps, key=lambda x: x["datetime_str"])
+            
+            # s（開始）とf（終了）のペアを作成して計算
+            current_start = None
+            work_sessions = []  # 勤務セッション（開始日、開始時刻、終了日、終了時刻、勤務時間）
+            
+            for ts in sorted_timestamps:
+                if ts["status"] == "start":
+                    # 新しい開始時刻を記録
+                    current_start = ts
+                elif ts["status"] == "end" and current_start:
+                    # 開始時刻がある場合、終了時刻とペアにして計算
+                    try:
+                        # 時刻をパース（HH:MM形式を想定）
+                        start_parts = current_start["time"].split(":")
+                        end_parts = ts["time"].split(":")
+                        
+                        if len(start_parts) >= 2 and len(end_parts) >= 2:
+                            start_hour = int(start_parts[0])
+                            start_min = int(start_parts[1])
+                            end_hour = int(end_parts[0])
+                            end_min = int(end_parts[1])
+                            
+                            # 日付を比較して日跨ぎを判定
+                            start_date = current_start["date"]
+                            end_date = ts["date"]
+                            
+                            # 分単位で計算
+                            start_total_min = start_hour * 60 + start_min
+                            end_total_min = end_hour * 60 + end_min
+                            
+                            # 日跨ぎの場合
+                            if start_date != end_date:
+                                # 日付が異なる場合は日跨ぎとして処理
+                                # 簡易的に翌日として計算（実際の日数差は考慮しない）
+                                end_total_min += 24 * 60
+                            elif end_total_min < start_total_min:
+                                # 同じ日付でも終了時刻が開始時刻より前の場合（データエラー）
+                                # この場合も日跨ぎとして処理
+                                end_total_min += 24 * 60
+                            
+                            work_minutes = end_total_min - start_total_min
+                            if work_minutes > 0:
+                                work_sessions.append({
+                                    "start_date": start_date,
+                                    "start_time": current_start["time"],
+                                    "end_date": end_date,
+                                    "end_time": ts["time"],
+                                    "work_minutes": work_minutes
+                                })
+                            
+                            # ペアが完成したらリセット
+                            current_start = None
+                    except Exception as e:
+                        print(f"時刻計算エラー: {user_name} {current_start['date']} {current_start['time']}-{ts['date']} {ts['time']}: {e}")
+                        current_start = None
+            
+            # 勤務セッションを日別に集計
+            for session in work_sessions:
+                # 勤務時間は開始日に計上
+                date = session["start_date"]
+                work_minutes = session["work_minutes"]
+                
+                # 日別集計
+                if date not in user_time_data[user_name]["daily_hours"]:
+                    user_time_data[user_name]["daily_hours"][date] = {
+                        "hours": 0,
+                        "minutes": 0,
+                        "formatted": "",
+                        "work_minutes": 0
+                    }
+                
+                user_time_data[user_name]["daily_hours"][date]["work_minutes"] += work_minutes
+                
+                # 月別集計用のキーを作成（YYYY/MM形式）
+                if "/" in date:
+                    month_key = "/".join(date.split("/")[:2])
+                    if month_key not in user_time_data[user_name]["monthly_hours"]:
+                        user_time_data[user_name]["monthly_hours"][month_key] = {
+                            "total_minutes": 0,
+                            "work_days": 0
+                        }
+                    user_time_data[user_name]["monthly_hours"][month_key]["total_minutes"] += work_minutes
+            
+            # 日別データを整形し、勤務日数をカウント
+            for date, day_data in user_time_data[user_name]["daily_hours"].items():
+                daily_minutes = day_data["work_minutes"]
+                if daily_minutes > 0:
+                    daily_hours = daily_minutes // 60
+                    daily_mins = daily_minutes % 60
+                    user_time_data[user_name]["daily_hours"][date]["hours"] = daily_hours
+                    user_time_data[user_name]["daily_hours"][date]["minutes"] = daily_mins
+                    user_time_data[user_name]["daily_hours"][date]["formatted"] = f"{daily_hours}時間{daily_mins}分"
+                    
+                    # 総計に加算
+                    user_time_data[user_name]["total_minutes"] += daily_minutes
+                    user_time_data[user_name]["work_days"] += 1
+                    
+                    # 月別の勤務日数をカウント
+                    if "/" in date:
+                        month_key = "/".join(date.split("/")[:2])
+                        if month_key in user_time_data[user_name]["monthly_hours"]:
+                            user_time_data[user_name]["monthly_hours"][month_key]["work_days"] += 1
+        
+        # 全ユーザーの分を時間に変換し、月別データもフォーマット
+        for user_name in user_time_data:
+            # 総計の変換
+            total_minutes = user_time_data[user_name]["total_minutes"]
+            user_time_data[user_name]["total_hours"] = total_minutes // 60
+            user_time_data[user_name]["total_minutes"] = total_minutes % 60
+            user_time_data[user_name]["total_time_formatted"] = f"{user_time_data[user_name]['total_hours']}時間{user_time_data[user_name]['total_minutes']}分"
+            
+            # 月別データのフォーマット
+            for month_key in user_time_data[user_name]["monthly_hours"]:
+                month_data = user_time_data[user_name]["monthly_hours"][month_key]
+                month_total_minutes = month_data["total_minutes"]
+                month_hours = month_total_minutes // 60
+                month_mins = month_total_minutes % 60
+                month_data["hours"] = month_hours
+                month_data["minutes"] = month_mins
+                month_data["formatted"] = f"{month_hours}時間{month_mins}分"
+        
+        # 存在しないユーザーも含めて全ユーザーを確保
+        for user in self.users:
+            if user["name"] not in user_time_data:
+                user_time_data[user["name"]] = {
+                    "name": user["name"],
+                    "total_hours": 0,
+                    "total_minutes": 0,
+                    "work_days": 0,
+                    "records": [],
+                    "daily_hours": {},
+                    "monthly_hours": {},
+                    "total_time_formatted": "0時間0分"
+                }
+        
+        return user_time_data
+    
     def reload_data(self):
         """データを再読み込み"""
         print("CSVデータを再読み込みしています...")
