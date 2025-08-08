@@ -107,6 +107,29 @@ export function Dashboard() {
     setComment("") // 送信後にコメントをクリア
   }
 
+  const handleApiTest = async () => {
+    try {
+      // テスト用のAPIエンドポイントを呼び出す
+      const response = await fetch('/api/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          message: 'テストAPIの呼び出し',
+        }),
+      })
+      
+      const data = await response.json()
+      console.log('APIレスポンス:', data)
+      alert(`APIテスト成功！\nレスポンス: ${JSON.stringify(data, null, 2)}`)
+    } catch (error) {
+      console.error('APIエラー:', error)
+      alert(`APIテスト失敗: ${error}`)
+    }
+  }
+
   // アナログ時計用の計算
   const hours = currentTime.getHours() % 12
   const minutes = currentTime.getMinutes()
@@ -234,14 +257,14 @@ export function Dashboard() {
                 </div>
                 
                 <div className="md:col-span-3 flex gap-3 items-center">
-                  <div className="grid grid-cols-2 gap-2 flex-grow-0" style={{ minWidth: '240px' }}>
+                  <div className="grid grid-cols-2 gap-2 flex-grow-0" style={{ minWidth: '280px' }}>
                     <Button 
                       onClick={handleClockIn}
-                      className="relative group w-full h-10 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
+                      className="relative group w-full h-12 text-base font-bold overflow-hidden rounded-lg transition-all duration-300"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-600 dark:to-blue-700 transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600 dark:group-hover:from-blue-500 dark:group-hover:to-blue-600"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                         </svg>
                         出勤
@@ -249,11 +272,11 @@ export function Dashboard() {
                     </Button>
                     <Button 
                       onClick={handleClockOut}
-                      className="relative group w-full h-10 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
+                      className="relative group w-full h-12 text-base font-bold overflow-hidden rounded-lg transition-all duration-300"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 dark:from-red-600 dark:to-red-700 transition-all duration-300 group-hover:from-red-500 group-hover:to-red-600 dark:group-hover:from-red-500 dark:group-hover:to-red-600"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                         退勤
@@ -261,24 +284,27 @@ export function Dashboard() {
                     </Button>
                   </div>
                   
-                  <div className="relative flex-1">
-                    <Textarea
-                      placeholder="コメント入力"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-10 py-2.5 pr-12 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
-                      rows={1}
-                    />
-                    <Button
-                      onClick={handleCommentSubmit}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                      </svg>
-                    </Button>
+                  <div className="relative flex-1 group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400/50 to-purple-400/50 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
+                    <div className="relative">
+                      <Textarea
+                        placeholder="コメント入力 (任意)"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        className="resize-none bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-600 hover:border-blue-400 dark:hover:border-blue-500 text-gray-900 dark:text-white placeholder:text-blue-400 dark:placeholder:text-blue-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-9 py-2 pr-10 rounded-lg shadow-sm hover:shadow-md w-full transition-all duration-300 ease-in-out"
+                        rows={1}
+                      />
+                      <Button
+                        onClick={handleCommentSubmit}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-md transition-colors duration-200"
+                        variant="ghost"
+                        size="sm"
+                      >
+                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -321,7 +347,21 @@ export function Dashboard() {
                   </div>
                 </div>
                 
-                <div></div> {/* 右側の空きスペース */}
+                {/* APIテストボタン（右側） */}
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleApiTest}
+                    className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 dark:from-green-600 dark:to-green-700 transition-all duration-300 group-hover:from-green-500 group-hover:to-green-600 dark:group-hover:from-green-500 dark:group-hover:to-green-600"></div>
+                    <div className="relative flex items-center gap-2 text-white font-semibold">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      APIテスト
+                    </div>
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-3 flex-1 overflow-hidden">
