@@ -321,17 +321,17 @@ export function Dashboard() {
                 {/* 累計時間表示（中央） */}
                 <div className="flex gap-3 justify-center">
                   <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-blue-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                    <div className="relative bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg px-3 py-1 border border-blue-200/50 dark:border-blue-400/30 transition-all duration-300">
-                      <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold text-center">今日累計</div>
-                      <div className="text-base font-bold bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">0:00</div>
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg blur opacity-60 group-hover:opacity-80 transition duration-300"></div>
+                    <div className="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-md rounded-lg px-4 py-2 border-2 border-blue-300 dark:border-blue-500 shadow-lg transition-all duration-300">
+                      <div className="text-sm text-blue-700 dark:text-blue-300 font-bold text-center mb-0.5">今日累計</div>
+                      <div className="text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 dark:from-blue-300 dark:to-blue-400 bg-clip-text text-transparent">0:00</div>
                     </div>
                   </div>
                   <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                    <div className="relative bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg px-3 py-1 border border-purple-200/50 dark:border-purple-400/30 transition-all duration-300">
-                      <div className="text-xs text-purple-600 dark:text-purple-400 font-semibold text-center">今月累計</div>
-                      <div className="text-base font-bold bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-400 dark:to-purple-500 bg-clip-text text-transparent">0:00</div>
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg blur opacity-60 group-hover:opacity-80 transition duration-300"></div>
+                    <div className="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-md rounded-lg px-4 py-2 border-2 border-purple-300 dark:border-purple-500 shadow-lg transition-all duration-300">
+                      <div className="text-sm text-purple-700 dark:text-purple-300 font-bold text-center mb-0.5">今月累計</div>
+                      <div className="text-xl font-bold bg-gradient-to-r from-purple-700 to-purple-800 dark:from-purple-300 dark:to-purple-400 bg-clip-text text-transparent">0:00</div>
                     </div>
                   </div>
                 </div>
