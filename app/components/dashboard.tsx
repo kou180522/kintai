@@ -239,7 +239,7 @@ export function Dashboard() {
                       onClick={handleClockIn}
                       className="relative group w-full h-10 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 dark:from-slate-700 dark:to-slate-800 transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600 dark:group-hover:from-slate-600 dark:group-hover:to-slate-700"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-600 dark:to-blue-700 transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600 dark:group-hover:from-blue-500 dark:group-hover:to-blue-600"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -251,7 +251,7 @@ export function Dashboard() {
                       onClick={handleClockOut}
                       className="relative group w-full h-10 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 dark:from-slate-600 dark:to-slate-700 transition-all duration-300 group-hover:from-red-500 group-hover:to-red-600 dark:group-hover:from-slate-500 dark:group-hover:to-slate-600"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 dark:from-red-600 dark:to-red-700 transition-all duration-300 group-hover:from-red-500 group-hover:to-red-600 dark:group-hover:from-red-500 dark:group-hover:to-red-600"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -286,7 +286,7 @@ export function Dashboard() {
                       onClick={() => console.log("編集申請")}
                       className="relative group h-10 px-6 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300 whitespace-nowrap"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-slate-600 dark:to-slate-700 transition-all duration-300 group-hover:from-gray-500 group-hover:to-gray-600 dark:group-hover:from-slate-500 dark:group-hover:to-slate-600"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 transition-all duration-300 group-hover:from-gray-500 group-hover:to-gray-600 dark:group-hover:from-gray-500 dark:group-hover:to-gray-600"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
