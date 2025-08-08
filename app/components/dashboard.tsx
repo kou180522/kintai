@@ -131,42 +131,58 @@ export function Dashboard() {
           {/* 統合カード */}
           <Card className="w-full shadow-2xl border-0 bg-white/80 dark:bg-black/40 backdrop-blur-xl overflow-hidden flex flex-col h-full transition-all duration-500 ease-in-out">
             {/* 打刻セクション */}
-            <div className="bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/30 dark:to-slate-600/30 backdrop-blur-sm p-2 border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
+            <div className="bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/30 dark:to-slate-600/30 backdrop-blur-sm p-1.5 border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
-                <div className="flex gap-3 items-center justify-center">
-                  {/* デジタル時計 */}
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 dark:from-slate-600 dark:to-slate-700 rounded-xl blur-xl opacity-30 group-hover:opacity-50 transition-all duration-300"></div>
-                    <div className="relative text-center space-y-0.5 bg-white/70 dark:bg-black/50 backdrop-blur-md rounded-lg py-2 px-3 border border-gray-300/50 dark:border-white/20 transition-all duration-500 ease-in-out">
-                      <div className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                        {formatDate(currentTime)}
-                      </div>
-                      <div className="text-xl font-bold tracking-wider text-gray-900 dark:text-white">
-                        {formatTime(currentTime)}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* アナログ時計 */}
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                    <div className="relative w-20 h-20 bg-white/70 dark:bg-black/50 backdrop-blur-md rounded-full border border-gray-300/50 dark:border-white/20 flex items-center justify-center transition-all duration-500 ease-in-out">
-                      <svg className="w-16 h-16" viewBox="0 0 100 100">
+                <div className="flex gap-3 items-center justify-center md:col-span-1">
+                  {/* 時計カード */}
+                  <Card className="border-0 bg-white/90 dark:bg-black/50 backdrop-blur-xl shadow-xl transition-all duration-300 hover:shadow-2xl">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-4">
+                        {/* デジタル時計 */}
+                        <div className="flex-1 text-center">
+                          <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            {formatDate(currentTime)}
+                          </div>
+                          <div className="text-lg font-bold tracking-wider bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mt-0.5">
+                            {formatTime(currentTime)}
+                          </div>
+                        </div>
+                        
+                        {/* 区切り線 */}
+                        <div className="w-px h-12 bg-gradient-to-b from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
+                        
+                        {/* アナログ時計 */}
+                        <div className="relative">
+                          {/* 外側のカード風装飾 */}
+                          <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur opacity-20"></div>
+                          <div className="relative w-20 h-20 bg-white dark:bg-gray-900 rounded-full shadow-xl p-1.5">
+                            <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-full shadow-inner flex items-center justify-center">
+                      <svg className="w-14 h-14" viewBox="0 0 100 100">
                         {/* 時計の文字盤 */}
                         <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" className="text-gray-300 dark:text-white/20" strokeWidth="2"/>
                         {/* 時間のマーカー */}
                         {[...Array(12)].map((_, i) => (
-                          <line
-                            key={i}
-                            x1="50"
-                            y1="5"
-                            x2="50"
-                            y2="10"
-                            stroke="currentColor"
-                            className="text-gray-400 dark:text-white/50"
-                            strokeWidth="2"
-                            transform={`rotate(${i * 30} 50 50)`}
-                          />
+                          <g key={i} transform={`rotate(${i * 30} 50 50)`}>
+                            <line
+                              x1="50"
+                              y1="5"
+                              x2="50"
+                              y2="10"
+                              stroke="currentColor"
+                              className="text-gray-400 dark:text-white/50"
+                              strokeWidth="2"
+                            />
+                            {/* 主要な時間（12, 3, 6, 9）にドット追加 */}
+                            {i % 3 === 0 && (
+                              <circle
+                                cx="50"
+                                cy="8"
+                                r="1.5"
+                                fill="currentColor"
+                                className="text-blue-500 dark:text-blue-400"
+                              />
+                            )}
+                          </g>
                         ))}
                         {/* 時針 */}
                         <g transform={`rotate(${hourDegrees} 50 50)`}>
@@ -209,19 +225,23 @@ export function Dashboard() {
                         {/* 中心点 */}
                         <circle cx="50" cy="50" r="3" fill="#374151" className="dark:fill-white/90"/>
                       </svg>
-                    </div>
-                  </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
                 
                 <div className="md:col-span-3 flex gap-3 items-center">
                   <div className="grid grid-cols-2 gap-2 flex-grow-0" style={{ minWidth: '240px' }}>
                     <Button 
                       onClick={handleClockIn}
-                      className="relative group w-full h-12 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
+                      className="relative group w-full h-10 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 dark:from-slate-700 dark:to-slate-800 transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600 dark:group-hover:from-slate-600 dark:group-hover:to-slate-700"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                         </svg>
                         出勤
@@ -229,11 +249,11 @@ export function Dashboard() {
                     </Button>
                     <Button 
                       onClick={handleClockOut}
-                      className="relative group w-full h-12 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
+                      className="relative group w-full h-10 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 dark:from-slate-600 dark:to-slate-700 transition-all duration-300 group-hover:from-red-500 group-hover:to-red-600 dark:group-hover:from-slate-500 dark:group-hover:to-slate-600"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                         退勤
@@ -247,7 +267,7 @@ export function Dashboard() {
                         placeholder="コメント"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-12 py-3 pr-12 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
+                        className="resize-none bg-gray-100/50 dark:bg-white/10 border-gray-300/50 dark:border-white/20 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-10 py-2.5 pr-12 rounded-lg backdrop-blur-sm w-full transition-all duration-500 ease-in-out"
                         rows={1}
                       />
                       <Button
@@ -256,7 +276,7 @@ export function Dashboard() {
                         variant="ghost"
                         size="sm"
                       >
-                        <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
                       </Button>
@@ -264,11 +284,11 @@ export function Dashboard() {
                     
                     <Button 
                       onClick={() => console.log("編集申請")}
-                      className="relative group h-12 px-6 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300 whitespace-nowrap"
+                      className="relative group h-10 px-6 text-sm font-bold overflow-hidden rounded-lg transition-all duration-300 whitespace-nowrap"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-slate-600 dark:to-slate-700 transition-all duration-300 group-hover:from-gray-500 group-hover:to-gray-600 dark:group-hover:from-slate-500 dark:group-hover:to-slate-600"></div>
                       <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                         編集申請
@@ -280,7 +300,7 @@ export function Dashboard() {
             </div>
             
             {/* グラフヘッダー */}
-            <CardHeader className="py-2 px-4 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
+            <CardHeader className="py-1.5 px-4 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
               <div className="grid grid-cols-3 items-center">
                 <div className="flex items-center gap-3">
                   <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-lg transition-colors duration-300">
@@ -289,7 +309,7 @@ export function Dashboard() {
                     </svg>
                   </div>
                   <div>
-                    <CardTitle className="text-base font-bold text-gray-900 dark:text-white">
+                    <CardTitle className="text-sm font-bold text-gray-900 dark:text-white">
                       勤務時間推移
                     </CardTitle>
                     <CardDescription className="text-xs text-gray-600 dark:text-gray-300">
@@ -302,16 +322,16 @@ export function Dashboard() {
                 <div className="flex gap-3 justify-center">
                   <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-blue-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                    <div className="relative bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg px-4 py-1.5 border border-blue-200/50 dark:border-blue-400/30 transition-all duration-300">
+                    <div className="relative bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg px-3 py-1 border border-blue-200/50 dark:border-blue-400/30 transition-all duration-300">
                       <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold text-center">今日累計</div>
-                      <div className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">0:00</div>
+                      <div className="text-base font-bold bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">0:00</div>
                     </div>
                   </div>
                   <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                    <div className="relative bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg px-4 py-1.5 border border-purple-200/50 dark:border-purple-400/30 transition-all duration-300">
+                    <div className="relative bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg px-3 py-1 border border-purple-200/50 dark:border-purple-400/30 transition-all duration-300">
                       <div className="text-xs text-purple-600 dark:text-purple-400 font-semibold text-center">今月累計</div>
-                      <div className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-400 dark:to-purple-500 bg-clip-text text-transparent">0:00</div>
+                      <div className="text-base font-bold bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-400 dark:to-purple-500 bg-clip-text text-transparent">0:00</div>
                     </div>
                   </div>
                 </div>
@@ -319,7 +339,7 @@ export function Dashboard() {
                 <div></div> {/* 右側の空きスペース */}
               </div>
             </CardHeader>
-            <CardContent className="p-1 flex-1 overflow-hidden">
+            <CardContent className="p-3 flex-1 overflow-hidden">
               <div className="w-full h-full">
                 <ChartContainer config={chartConfig} className="h-full" style={{ minWidth: '100%' }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -327,8 +347,8 @@ export function Dashboard() {
                       data={chartData}
                       margin={{
                         top: 10,
-                        right: 5,
-                        left: 25,
+                        right: 20,
+                        left: 35,
                         bottom: 45,
                       }}
                     >
