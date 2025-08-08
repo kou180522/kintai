@@ -97,7 +97,7 @@ export default function Page2() {
                         <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-300 dark:text-white/20" strokeOpacity={0.8} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-400 dark:text-white/10" strokeOpacity={0.8} />
                     <XAxis
                       dataKey="month"
                       stroke="#6b7280"
