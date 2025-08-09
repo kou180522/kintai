@@ -16,58 +16,23 @@ import {
 } from "~/components/ui/chart"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Label } from "recharts"
 
-const chartData = [
-  { date: "2025-01-01", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-02", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-03", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-04", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-05", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-06", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-07", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-08", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-09", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-10", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-11", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-12", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-13", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-14", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-15", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-16", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-17", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-18", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-19", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-20", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-21", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-22", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-23", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-24", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-25", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-26", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-27", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-28", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-29", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-30", 田中: null, 佐藤: null, 山田: null },
-  { date: "2025-01-31", 田中: null, 佐藤: null, 山田: null },
+// 初期データ（APIから取得するまでの仮データ）
+const initialChartData = [
+  { date: "01/01" },
+  { date: "01/02" },
+  { date: "01/03" },
 ]
 
-const chartConfig = {
-  田中: {
-    label: "田中",
-    color: "hsl(var(--chart-1))",
-  },
-  佐藤: {
-    label: "佐藤",
-    color: "hsl(var(--chart-2))",
-  },
-  山田: {
-    label: "山田",
-    color: "hsl(var(--chart-3))",
-  },
-} satisfies ChartConfig
+// 初期設定（APIから取得するまでの仮設定）
+const initialChartConfig = {} satisfies ChartConfig
 
 export function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [comment, setComment] = useState("")
+  const [chartData, setChartData] = useState(initialChartData)
+  const [chartConfig, setChartConfig] = useState<ChartConfig>(initialChartConfig)
+  const [isChartLoading, setIsChartLoading] = useState(false)
+  const [topUsers, setTopUsers] = useState<string[]>([])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -76,6 +41,33 @@ export function Dashboard() {
 
     return () => clearInterval(timer)
   }, [])
+
+  // グラフデータを取得
+  useEffect(() => {
+    fetchChartData()
+  }, [])
+
+  const fetchChartData = async () => {
+    setIsChartLoading(true)
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/subpage/daily-chart?days=31&top_users=15`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setChartData(data.chart_data)
+          setChartConfig(data.user_configs)
+          // トップユーザーのリストを取得
+          setTopUsers(Object.keys(data.user_configs))
+        }
+      }
+    } catch (error) {
+      console.error('グラフデータ取得エラー:', error)
+    } finally {
+      setIsChartLoading(false)
+    }
+  }
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('ja-JP', { 
@@ -454,7 +446,9 @@ export function Dashboard() {
                       勤務時間推移
                     </CardTitle>
                     <CardDescription className="text-xs text-gray-600 dark:text-gray-300">
-                      日別の勤務時間を表示しています
+                      {isChartLoading ? 'データ読み込み中...' : 
+                       topUsers.length > 0 ? `全${topUsers.length}人のユーザーを表示中` : 
+                       '日別の勤務時間を表示しています'}
                     </CardDescription>
                   </div>
                 </div>
@@ -530,8 +524,9 @@ export function Dashboard() {
                         axisLine={true}
                         tickMargin={4}
                         tickFormatter={(value) => {
-                          const date = new Date(value);
-                          return `${date.getDate()}`;
+                          // valueは "01/15" のような形式なので、日付部分だけ取得
+                          const parts = value.split('/');
+                          return parts.length > 1 ? parts[1] : value;
                         }}
                         interval={0}
                         angle={-90}
@@ -547,42 +542,75 @@ export function Dashboard() {
                         axisLine={true}
                         tickMargin={4}
                         domain={[0, 12]}
-                        ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
+                        ticks={[0, 2, 4, 6, 8, 10, 12]}
+                        tickFormatter={(value) => `${value}h`}
                         tick={{ fontSize: 9 }}
                       >
-                        <Label value="Hours" angle={-90} position="insideLeft" style={{ fontSize: 12, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
+                        <Label value="勤務時間" angle={-90} position="insideLeft" style={{ fontSize: 12, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
                       </YAxis>
                       <ChartTooltip
                         cursor={false}
-                        content={<ChartTooltipContent />}
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                                <p className="text-sm font-semibold mb-1">{label}</p>
+                                {payload.map((entry: any, index: number) => {
+                                  const formattedKey = `${entry.dataKey}_formatted`
+                                  const formattedValue = entry.payload[formattedKey]
+                                  if (entry.value !== null && entry.value !== undefined) {
+                                    return (
+                                      <p key={index} className="text-xs" style={{ color: entry.color }}>
+                                        {entry.dataKey}: {formattedValue || `${entry.value}時間`}
+                                      </p>
+                                    )
+                                  }
+                                  return null
+                                })}
+                              </div>
+                            )
+                          }
+                          return null
+                        }}
                       />
-                      <Line
-                        type="monotone"
-                        dataKey="田中"
-                        stroke="#3B82F6"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: "#3B82F6", strokeWidth: 1, stroke: "white" }}
-                        connectNulls={true}
-                        activeDot={{ r: 7, strokeWidth: 0 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="佐藤"
-                        stroke="#10B981"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: "#10B981", strokeWidth: 1, stroke: "white" }}
-                        connectNulls={true}
-                        activeDot={{ r: 7, strokeWidth: 0 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="山田"
-                        stroke="#F59E0B"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: "#F59E0B", strokeWidth: 1, stroke: "white" }}
-                        connectNulls={true}
-                        activeDot={{ r: 7, strokeWidth: 0 }}
-                      />
+                      {/* 動的にユーザーごとのLineを生成 */}
+                      {topUsers.map((userName, index) => {
+                        const config = chartConfig[userName]
+                        if (!config) return null
+                        
+                        // 15人分の色の配列
+                        const colors = [
+                          "#3B82F6", // 1. 青
+                          "#10B981", // 2. 緑
+                          "#F59E0B", // 3. オレンジ
+                          "#8B5CF6", // 4. 紫
+                          "#EF4444", // 5. 赤
+                          "#06B6D4", // 6. シアン
+                          "#8B5CF6", // 7. バイオレット
+                          "#EC4899", // 8. ピンク
+                          "#14B8A6", // 9. ティール
+                          "#F59E0B", // 10. アンバー
+                          "#84CC16", // 11. ライム
+                          "#6366F1", // 12. インディゴ
+                          "#F43F5E", // 13. ローズ
+                          "#0EA5E9", // 14. スカイ
+                          "#A855F7", // 15. パープル
+                        ]
+                        const color = colors[index % colors.length]
+                        
+                        return (
+                          <Line
+                            key={userName}
+                            type="monotone"
+                            dataKey={userName}
+                            stroke={color}
+                            strokeWidth={1.5}
+                            dot={{ r: 2, fill: color, strokeWidth: 0.5, stroke: "white" }}
+                            connectNulls={true}
+                            activeDot={{ r: 5, strokeWidth: 0 }}
+                          />
+                        )
+                      })}
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
