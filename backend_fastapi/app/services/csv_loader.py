@@ -166,17 +166,40 @@ class CSVDataLoader:
             # s（開始）とf（終了）のペアを作成して計算
             current_start = None
             work_sessions = []  # 勤務セッション（開始日、開始時刻、終了日、終了時刻、勤務時間）
+            skip_until = -1  # 連続する終了をスキップするためのインデックス
             
-            for ts in sorted_timestamps:
+            for i, ts in enumerate(sorted_timestamps):
+                # 既に処理済みの終了はスキップ
+                if i < skip_until:
+                    continue
                 if ts["status"] == "start":
+                    # 既に開始時刻がある場合は警告（連続するstart）
+                    if current_start:
+                        print(f"警告: {user_name} - 連続する開始時刻 {current_start['date']} {current_start['time']} → {ts['date']} {ts['time']}")
                     # 新しい開始時刻を記録
                     current_start = ts
-                elif ts["status"] == "end" and current_start:
-                    # 開始時刻がある場合、終了時刻とペアにして計算
+                elif ts["status"] == "end":
+                    if not current_start:
+                        # 開始時刻なしで終了時刻が来た場合は警告
+                        print(f"警告: {user_name} - 開始時刻なしの終了 {ts['date']} {ts['time']}")
+                        continue
+                    
+                    # 次のレコードも終了かチェック（連続する終了の場合は最後のを使う）
+                    final_end = ts
+                    next_idx = i + 1
+                    while next_idx < len(sorted_timestamps) and sorted_timestamps[next_idx]["status"] == "end":
+                        print(f"情報: {user_name} - 連続する終了時刻を検出 {ts['date']} {ts['time']} → {sorted_timestamps[next_idx]['date']} {sorted_timestamps[next_idx]['time']}")
+                        final_end = sorted_timestamps[next_idx]
+                        next_idx += 1
+                    
+                    # 次のループでスキップする位置を設定
+                    skip_until = next_idx
+                    
+                    # 最終的な終了時刻とペアにして計算
                     try:
                         # 時刻をパース（HH:MM形式を想定）
                         start_parts = current_start["time"].split(":")
-                        end_parts = ts["time"].split(":")
+                        end_parts = final_end["time"].split(":")
                         
                         if len(start_parts) >= 2 and len(end_parts) >= 2:
                             start_hour = int(start_parts[0])
@@ -186,7 +209,7 @@ class CSVDataLoader:
                             
                             # 日付を比較して日跨ぎを判定
                             start_date = current_start["date"]
-                            end_date = ts["date"]
+                            end_date = final_end["date"]
                             
                             # 分単位で計算
                             start_total_min = start_hour * 60 + start_min
@@ -203,19 +226,23 @@ class CSVDataLoader:
                                 end_total_min += 24 * 60
                             
                             work_minutes = end_total_min - start_total_min
-                            if work_minutes > 0:
+                            
+                            # 24時間を超える勤務は無効（データエラーとして扱う）
+                            if work_minutes > 24 * 60:  # 1440分 = 24時間
+                                print(f"警告: {user_name} - 24時間を超える勤務時間を検出（無効化） {start_date} {current_start['time']} → {end_date} {final_end['time']} = {work_minutes}分 ({work_minutes//60}時間{work_minutes%60}分)")
+                            elif work_minutes > 0:
                                 work_sessions.append({
                                     "start_date": start_date,
                                     "start_time": current_start["time"],
                                     "end_date": end_date,
-                                    "end_time": ts["time"],
+                                    "end_time": final_end["time"],
                                     "work_minutes": work_minutes
                                 })
                             
                             # ペアが完成したらリセット
                             current_start = None
                     except Exception as e:
-                        print(f"時刻計算エラー: {user_name} {current_start['date']} {current_start['time']}-{ts['date']} {ts['time']}: {e}")
+                        print(f"時刻計算エラー: {user_name} {current_start['date']} {current_start['time']}-{final_end['date']} {final_end['time']}: {e}")
                         current_start = None
             
             # 勤務セッションを日別に集計

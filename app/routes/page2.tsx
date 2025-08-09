@@ -1,5 +1,5 @@
 import type { Route } from "./+types/page2";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -14,7 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "~/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Label } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Label, BarChart, Bar } from "recharts";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -48,48 +48,66 @@ const chartConfig = {} satisfies ChartConfig;
 
 export default function Page2() {
   const [isLoading, setIsLoading] = useState(false);
+  const [subpageData, setSubpageData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleApiCall = async () => {
     setIsLoading(true);
+    setError(null);
     try {
-      // バックエンドAPIを呼び出す（スラッシュを追加）
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/test/`, {
+      const response = await fetch(`${apiUrl}/subpage/update?limit=15&months=12`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
       
-      const data = await response.json();
-      console.log('履歴ページ - APIレスポンス:', data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
-      // ユーザー情報を整形して表示
-      if (data.success && data.data && data.data.users) {
-        const users = data.data.users;
-        const totalUsers = data.data.total_users;
-        const totalRecords = data.data.total_records;
+      const data = await response.json();
+      console.log('サブページAPIレスポンス:', data);
+      setSubpageData(data);
+      
+      // サマリー情報を表示
+      if (data.success) {
+        let message = '📊 勤務データ更新完了\n\n';
         
-        let userList = 'ユーザー情報:\n';
-        users.forEach((user, index) => {
-          userList += `\n${index + 1}. ${user.name}\n`;
-          userList += `   ID: ${user.employee_id}\n`;
-          userList += `   メール: ${user.email}\n`;
-          userList += `   部署: ${user.department}\n`;
-          userList += `   役職: ${user.position}\n`;
-        });
+        // 統計情報
+        if (data.statistics) {
+          message += '【全体統計】\n';
+          message += `総ユーザー数: ${data.statistics.total_users}人\n`;
+          message += `アクティブユーザー: ${data.statistics.active_users}人\n`;
+          message += `総勤務時間: ${data.statistics.total_work_time}\n`;
+          message += `総勤務日数: ${data.statistics.total_work_days}日\n\n`;
+        }
         
-        alert(`✅ 履歴API成功！\n\n` +
-              `CSVファイルから${totalUsers}人のユーザー情報を取得しました。\n` +
-              `勤怠レコード数: ${totalRecords}件\n\n` +
-              `${userList}\n` +
-              `（最初の5人を表示）`);
-      } else {
-        alert(`APIテスト成功！\nレスポンス: ${JSON.stringify(data, null, 2)}`);
+        // TOP5ユーザー
+        if (data.users_summary && data.users_summary.length > 0) {
+          message += '【勤務時間TOP5】\n';
+          data.users_summary.slice(0, 5).forEach((user, index) => {
+            const emoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+            message += `${emoji} ${user.name}: ${user.total_time_formatted} (${user.work_days}日)\n`;
+          });
+          message += '\n';
+        }
+        
+        // 月別サマリー（最新3ヶ月）
+        if (data.monthly_summary && data.monthly_summary.length > 0) {
+          message += '【月別勤務時間（最新3ヶ月）】\n';
+          data.monthly_summary.slice(0, 3).forEach(month => {
+            message += `${month.month}: ${month.total_time_formatted} (${month.users_count}人)\n`;
+          });
+        }
+        
+        alert(message);
       }
     } catch (error) {
       console.error('APIエラー:', error);
-      alert(`APIテスト失敗: ${error}`);
+      setError(error instanceof Error ? error.message : 'API呼び出しエラー');
+      alert(`APIエラー: ${error}`);
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +148,7 @@ export default function Page2() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                   </svg>
-                  {isLoading ? '処理中...' : '履歴API'}
+                  {isLoading ? '処理中...' : 'データ更新'}
                 </div>
               </Button>
             </div>
