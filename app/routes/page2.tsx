@@ -50,6 +50,16 @@ export default function Page2() {
   const [isLoading, setIsLoading] = useState(false);
   const [subpageData, setSubpageData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [monthlyChartData, setMonthlyChartData] = useState<any[]>([]);
+  const [userMonthlyData, setUserMonthlyData] = useState<any[]>([]);
+  const [userConfigs, setUserConfigs] = useState<any>({});
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+
+  // ページ読み込み時にデータを取得
+  useEffect(() => {
+    handleApiCall();
+    fetchUserMonthlyData();
+  }, []);
 
   const handleApiCall = async () => {
     setIsLoading(true);
@@ -70,6 +80,18 @@ export default function Page2() {
       const data = await response.json();
       console.log('サブページAPIレスポンス:', data);
       setSubpageData(data);
+      
+      // 月別データをグラフ用に変換
+      if (data.monthly_summary) {
+        const chartData = data.monthly_summary.map((month: any) => ({
+          month: month.month,
+          hours: month.total_hours + (month.total_minutes / 60),
+          totalTime: month.total_time_formatted,
+          users: month.users_count,
+          days: month.work_days
+        })).reverse(); // 古い月から新しい月の順にする
+        setMonthlyChartData(chartData);
+      }
       
       // サマリー情報を表示
       if (data.success) {
@@ -113,6 +135,25 @@ export default function Page2() {
     }
   };
 
+  const fetchUserMonthlyData = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/subpage/monthly-by-user?top_users=15&months=12`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setUserMonthlyData(data.chart_data);
+          setUserConfigs(data.user_configs);
+          // デフォルトで全ユーザーを選択
+          setSelectedUsers(Object.keys(data.user_configs));
+        }
+      }
+    } catch (error) {
+      console.error('ユーザー別月別データ取得エラー:', error);
+    }
+  };
+
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500 ease-in-out">
       <div className="absolute inset-0 opacity-10">
@@ -131,15 +172,20 @@ export default function Page2() {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                    勤務履歴
+                    月別勤務時間推移
                   </CardTitle>
                   <CardDescription className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
-                    過去12ヶ月の月別勤務時間
+                    {userMonthlyData.length > 0 
+                      ? `${userMonthlyData[0]?.month} 〜 ${userMonthlyData[userMonthlyData.length - 1]?.month} (全${Object.keys(userConfigs).length}人のユーザー)`
+                      : '過去12ヶ月の月別勤務時間'}
                   </CardDescription>
                 </div>
               </div>
               <Button
-                onClick={handleApiCall}
+                onClick={() => {
+                  handleApiCall();
+                  fetchUserMonthlyData();
+                }}
                 disabled={isLoading}
                 className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
               >
@@ -158,7 +204,7 @@ export default function Page2() {
               <ChartContainer config={chartConfig} className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={chartData}
+                    data={userMonthlyData.length > 0 ? userMonthlyData : chartData}
                     margin={{
                       top: 10,
                       right: 30,
@@ -168,16 +214,8 @@ export default function Page2() {
                   >
                     <defs>
                       <linearGradient id="colorGradient1" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
-                      </linearGradient>
-                      <linearGradient id="colorGradient2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-                      </linearGradient>
-                      <linearGradient id="colorGradient3" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
+                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.9}/>
+                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.3}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-400 dark:text-white/10" strokeOpacity={0.8} />
@@ -200,20 +238,98 @@ export default function Page2() {
                       tickLine={true}
                       axisLine={true}
                       tickMargin={8}
-                      domain={[0, 200]}
-                      ticks={[0, 50, 100, 150, 200]}
+                      domain={[0, 'auto']}
+                      tickFormatter={(value) => `${Math.round(value)}h`}
                       tick={{ fontSize: 11 }}
                     >
-                      <Label value="Hours" angle={-90} position="insideLeft" style={{ fontSize: 13, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
+                      <Label value="月別勤務時間" angle={-90} position="insideLeft" style={{ fontSize: 13, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
                     </YAxis>
                     <ChartTooltip
                       cursor={false}
-                      content={<ChartTooltipContent />}
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                              <p className="text-sm font-semibold mb-2">{label}</p>
+                              {payload.map((entry: any, index: number) => {
+                                const formattedKey = `${entry.dataKey}_formatted`;
+                                const formattedValue = entry.payload[formattedKey];
+                                if (entry.value !== null && entry.value > 0) {
+                                  return (
+                                    <p key={index} className="text-xs py-0.5" style={{ color: entry.color }}>
+                                      {entry.dataKey}: {formattedValue || `${Math.round(entry.value)}時間`}
+                                    </p>
+                                  );
+                                }
+                                return null;
+                              })}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                     />
+                    {/* 各ユーザーの折れ線を動的に生成 */}
+                    {selectedUsers.map((userName, index) => {
+                      const config = userConfigs[userName];
+                      if (!config) return null;
+                      
+                      return (
+                        <Line
+                          key={userName}
+                          type="monotone"
+                          dataKey={userName}
+                          stroke={config.color}
+                          strokeWidth={2}
+                          dot={{ r: 3, fill: config.color }}
+                          activeDot={{ r: 5 }}
+                          connectNulls={false}
+                        />
+                      );
+                    })}
                   </LineChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </div>
+            
+            {/* ユーザー凡例 */}
+            {Object.keys(userConfigs).length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-3 justify-center">
+                {Object.entries(userConfigs).map(([userName, config]: [string, any]) => (
+                  <div key={userName} className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: config.color }}
+                    />
+                    <span className="text-xs text-gray-700 dark:text-gray-300">
+                      {userName}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      ({config.total})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* 月別データサマリー */}
+            {subpageData && subpageData.monthly_summary && (
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                {subpageData.monthly_summary.slice(0, 4).map((month: any, index: number) => (
+                  <div key={month.month} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                    <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                      {month.month}
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {month.total_time_formatted}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {month.work_days}日 / {month.users_count}人
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

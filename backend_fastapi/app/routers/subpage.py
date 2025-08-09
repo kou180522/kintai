@@ -323,6 +323,103 @@ async def get_daily_chart_data(
             detail=f"日別グラフデータの取得中にエラーが発生しました: {str(e)}"
         )
 
+@router.get("/monthly-by-user")
+async def get_monthly_by_user(
+    top_users: int = Query(default=15, description="表示するユーザー数（0で全員）"),
+    months: int = Query(default=12, description="表示する月数")
+):
+    """
+    ユーザー別の月別勤務時間データを取得
+    """
+    try:
+        from datetime import datetime
+        from collections import defaultdict
+        
+        user_time_data = csv_loader.get_user_time_data()
+        
+        # ユーザーを勤務時間順にソート
+        sorted_users = sorted(
+            user_time_data.items(),
+            key=lambda x: x[1]["total_hours"] * 60 + x[1]["total_minutes"],
+            reverse=True
+        )
+        
+        # top_users が 0 の場合は全ユーザー、それ以外は指定数
+        if top_users > 0:
+            sorted_users = sorted_users[:top_users]
+        
+        # 全ての月を収集
+        all_months = set()
+        for _, user_data in sorted_users:
+            for month_key in user_data.get("monthly_hours", {}).keys():
+                all_months.add(month_key)
+        
+        # 月をソート（古い順）
+        sorted_months = sorted(all_months)[-months:]  # 最新N月分
+        
+        # グラフデータを作成
+        chart_data = []
+        for month in sorted_months:
+            data_point = {"month": month}
+            
+            # 各ユーザーの勤務時間を追加
+            for user_name, user_data in sorted_users:
+                month_data = user_data.get("monthly_hours", {}).get(month)
+                if month_data:
+                    # 時間を小数に変換
+                    hours = month_data.get("hours", 0)
+                    minutes = month_data.get("minutes", 0)
+                    decimal_hours = hours + (minutes / 60)
+                    data_point[user_name] = round(decimal_hours, 2)
+                    data_point[f"{user_name}_formatted"] = month_data.get("formatted", "0時間0分")
+                else:
+                    data_point[user_name] = 0
+                    data_point[f"{user_name}_formatted"] = "0時間0分"
+            
+            chart_data.append(data_point)
+        
+        # ユーザー設定（名前と色）
+        user_configs = {}
+        colors = [
+            "#3B82F6",  # 1. Blue
+            "#10B981",  # 2. Green  
+            "#F59E0B",  # 3. Orange
+            "#8B5CF6",  # 4. Purple
+            "#EF4444",  # 5. Red
+            "#06B6D4",  # 6. Cyan
+            "#EC4899",  # 7. Pink
+            "#14B8A6",  # 8. Teal
+            "#F97316",  # 9. Dark Orange
+            "#84CC16",  # 10. Lime
+            "#6366F1",  # 11. Indigo
+            "#F43F5E",  # 12. Rose
+            "#0EA5E9",  # 13. Sky
+            "#A855F7",  # 14. Purple
+            "#22C55E",  # 15. Emerald
+        ]
+        
+        for i, (user_name, user_data) in enumerate(sorted_users):
+            total_time = user_data["total_time_formatted"]
+            user_configs[user_name] = {
+                "label": user_name,
+                "color": colors[i % len(colors)],
+                "total": total_time
+            }
+        
+        return {
+            "success": True,
+            "chart_data": chart_data,
+            "user_configs": user_configs,
+            "period": f"{sorted_months[0] if sorted_months else ''} 〜 {sorted_months[-1] if sorted_months else ''}",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"月別ユーザーデータの取得中にエラーが発生しました: {str(e)}"
+        )
+
 @router.get("/ranking")
 async def get_ranking(
     period: str = Query(default="all", description="集計期間: all, month, week"),
