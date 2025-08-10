@@ -54,12 +54,27 @@ export default function Page2() {
   const [userMonthlyData, setUserMonthlyData] = useState<any[]>([]);
   const [userConfigs, setUserConfigs] = useState<any>({});
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   // ページ読み込み時にデータを取得
   useEffect(() => {
     handleApiCall();
     fetchUserMonthlyData();
   }, []);
+
+  // 自動更新（30秒ごと）
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      handleApiCall();
+      fetchUserMonthlyData();
+      console.log('月別データを自動更新しました:', new Date().toLocaleTimeString());
+    }, 30000); // 30秒ごと
+    
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
 
   const handleApiCall = async () => {
     setIsLoading(true);
@@ -80,6 +95,7 @@ export default function Page2() {
       const data = await response.json();
       console.log('サブページAPIレスポンス:', data);
       setSubpageData(data);
+      setLastUpdateTime(new Date());
       
       // 月別データをグラフ用に変換
       if (data.monthly_summary) {
@@ -181,22 +197,45 @@ export default function Page2() {
                   </CardDescription>
                 </div>
               </div>
-              <Button
-                onClick={() => {
-                  handleApiCall();
-                  fetchUserMonthlyData();
-                }}
-                disabled={isLoading}
-                className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-700 transition-all duration-300 group-hover:from-purple-500 group-hover:to-purple-600 dark:group-hover:from-purple-500 dark:group-hover:to-purple-600"></div>
-                <div className="relative flex items-center gap-2 text-white font-semibold">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                  </svg>
-                  {isLoading ? '処理中...' : 'データ更新'}
-                </div>
-              </Button>
+              <div className="flex items-center gap-2">
+                {/* 最終更新時刻 */}
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  最終更新: {lastUpdateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                
+                {/* 自動更新トグル */}
+                <Button
+                  onClick={() => setAutoRefresh(!autoRefresh)}
+                  className="relative group h-10 px-3 overflow-hidden rounded-lg transition-all duration-300"
+                  variant="outline"
+                >
+                  <div className={`absolute inset-0 transition-all duration-300 ${autoRefresh ? 'bg-gradient-to-r from-blue-400 to-blue-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}></div>
+                  <div className="relative flex items-center gap-2 text-white font-semibold">
+                    <svg className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {autoRefresh ? '自動ON' : '自動OFF'}
+                  </div>
+                </Button>
+                
+                {/* 手動更新ボタン */}
+                <Button
+                  onClick={() => {
+                    handleApiCall();
+                    fetchUserMonthlyData();
+                  }}
+                  disabled={isLoading}
+                  className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-700 transition-all duration-300 group-hover:from-purple-500 group-hover:to-purple-600 dark:group-hover:from-purple-500 dark:group-hover:to-purple-600"></div>
+                  <div className="relative flex items-center gap-2 text-white font-semibold">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                    </svg>
+                    {isLoading ? '処理中...' : 'データ更新'}
+                  </div>
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-2 flex-1 overflow-hidden">
