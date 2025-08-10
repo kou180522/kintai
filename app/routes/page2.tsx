@@ -81,7 +81,7 @@ export default function Page2() {
     setIsLoading(true);
     setError(null);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
       const response = await fetch(`${apiUrl}/subpage/update?limit=15&months=12`, {
         method: 'GET',
         headers: {
@@ -155,7 +155,7 @@ export default function Page2() {
   const fetchUserMonthlyData = async () => {
     try {
       setDataError(null);
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
       console.log('Fetching user monthly data from:', `${apiUrl}/subpage/monthly-by-user?top_users=15&months=12`);
       
       const response = await fetch(`${apiUrl}/subpage/monthly-by-user?top_users=15&months=12`);

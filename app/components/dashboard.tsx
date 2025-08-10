@@ -65,7 +65,7 @@ export function Dashboard() {
   const fetchChartData = async () => {
     setIsChartLoading(true)
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001'
       const response = await fetch(`${apiUrl}/subpage/daily-chart?days=31&top_users=15`)
       
       if (response.ok) {
@@ -111,7 +111,7 @@ export function Dashboard() {
   // 起動時に監視状態を確認
   useEffect(() => {
     const checkMonitorStatus = async () => {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001'
       try {
         const response = await fetch(`${apiUrl}/monitor/status`)
         if (response.ok) {
@@ -144,7 +144,7 @@ export function Dashboard() {
 
   const handleClockIn = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
       const response = await fetch(`${apiUrl}/attendance/clock-in`, {
         method: 'POST',
         headers: {
@@ -168,7 +168,7 @@ export function Dashboard() {
 
   const handleClockOut = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
       const response = await fetch(`${apiUrl}/attendance/clock-out`, {
         method: 'POST',
         headers: {
@@ -198,7 +198,7 @@ export function Dashboard() {
   const handleApiTest = async () => {
     try {
       // バックエンドのテスト用APIエンドポイントを呼び出す（GETメソッドに変更）
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
       const fullUrl = `${apiUrl}/test/`;
       
       console.log('API呼び出し開始:', fullUrl);

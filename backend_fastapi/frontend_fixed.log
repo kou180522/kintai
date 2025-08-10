@@ -1,0 +1,7 @@
+
+> start
+> react-router-serve ./build/server/index.js
+
+[react-router-serve] http://localhost:3000 (http://192.168.3.8:3000)
+GET / 200 - - 45.434 ms
+
