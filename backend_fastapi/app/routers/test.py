@@ -23,6 +23,23 @@ class TestResponse(BaseModel):
     processedBy: Optional[str] = None
     data: Optional[dict] = None
 
+@router.post("/reload")
+async def reload_data():
+    """CSVデータを再読み込み"""
+    try:
+        csv_loader.reload_data()
+        return {
+            "success": True,
+            "message": "データが再読み込みされました",
+            "users": len(csv_loader.get_users()),
+            "records": len(csv_loader.get_attendance_records())
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"エラー: {str(e)}"
+        }
+
 @router.get("/")
 async def get_test():
     """

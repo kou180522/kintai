@@ -215,14 +215,29 @@ class CSVDataLoader:
                             start_total_min = start_hour * 60 + start_min
                             end_total_min = end_hour * 60 + end_min
                             
-                            # 日跨ぎの場合
+                            # 日跨ぎの場合の処理を改善
                             if start_date != end_date:
-                                # 日付が異なる場合は日跨ぎとして処理
-                                # 簡易的に翌日として計算（実際の日数差は考慮しない）
-                                end_total_min += 24 * 60
+                                # 日付が異なる場合
+                                try:
+                                    from datetime import datetime
+                                    start_dt = datetime.strptime(start_date, "%Y/%m/%d")
+                                    end_dt = datetime.strptime(end_date, "%Y/%m/%d")
+                                    days_diff = (end_dt - start_dt).days
+                                    
+                                    # 日付が逆転している場合（エラーデータ）
+                                    if days_diff < 0:
+                                        print(f"警告: {user_name} - 日付が逆転 {start_date} → {end_date}")
+                                        # 翌日として処理
+                                        end_total_min += 24 * 60
+                                    else:
+                                        # 正しい日数差を計算
+                                        end_total_min += days_diff * 24 * 60
+                                except:
+                                    # パースエラーの場合は翌日として処理
+                                    end_total_min += 24 * 60
                             elif end_total_min < start_total_min:
-                                # 同じ日付でも終了時刻が開始時刻より前の場合（データエラー）
-                                # この場合も日跨ぎとして処理
+                                # 同じ日付でも終了時刻が開始時刻より前の場合
+                                # 日跨ぎとして処理
                                 end_total_min += 24 * 60
                             
                             work_minutes = end_total_min - start_total_min

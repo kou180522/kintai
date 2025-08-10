@@ -33,6 +33,9 @@ export function Dashboard() {
   const [chartConfig, setChartConfig] = useState<ChartConfig>(initialChartConfig)
   const [isChartLoading, setIsChartLoading] = useState(false)
   const [topUsers, setTopUsers] = useState<string[]>([])
+  const [lastUpdateTime, setLastUpdateTime] = useState(new Date())
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [isMonitoring, setIsMonitoring] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,6 +50,18 @@ export function Dashboard() {
     fetchChartData()
   }, [])
 
+  // 自動更新（30秒ごと）
+  useEffect(() => {
+    if (!autoRefresh) return
+    
+    const interval = setInterval(() => {
+      fetchChartData()
+      console.log('データを自動更新しました:', new Date().toLocaleTimeString())
+    }, 30000) // 30秒ごと
+    
+    return () => clearInterval(interval)
+  }, [autoRefresh])
+
   const fetchChartData = async () => {
     setIsChartLoading(true)
     try {
@@ -60,6 +75,7 @@ export function Dashboard() {
           setChartConfig(data.user_configs)
           // トップユーザーのリストを取得
           setTopUsers(Object.keys(data.user_configs))
+          setLastUpdateTime(new Date())
         }
       }
     } catch (error) {
@@ -68,6 +84,46 @@ export function Dashboard() {
       setIsChartLoading(false)
     }
   }
+
+  const handleRefresh = () => {
+    fetchChartData()
+  }
+
+  const toggleMonitoring = async () => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    const endpoint = isMonitoring ? '/monitor/stop' : '/monitor/start'
+    
+    try {
+      const response = await fetch(`${apiUrl}${endpoint}`, {
+        method: 'POST',
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setIsMonitoring(!isMonitoring)
+        console.log('監視状態:', data.message)
+      }
+    } catch (error) {
+      console.error('監視状態変更エラー:', error)
+    }
+  }
+
+  // 起動時に監視状態を確認
+  useEffect(() => {
+    const checkMonitorStatus = async () => {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      try {
+        const response = await fetch(`${apiUrl}/monitor/status`)
+        if (response.ok) {
+          const data = await response.json()
+          setIsMonitoring(data.is_monitoring)
+        }
+      } catch (error) {
+        console.error('監視状態取得エラー:', error)
+      }
+    }
+    checkMonitorStatus()
+  }, [])
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('ja-JP', { 
@@ -449,6 +505,11 @@ export function Dashboard() {
                       {isChartLoading ? 'データ読み込み中...' : 
                        topUsers.length > 0 ? `全${topUsers.length}人のユーザーを表示中` : 
                        '日別の勤務時間を表示しています'}
+                      {!isChartLoading && (
+                        <span className="ml-2 text-xs">
+                          最終更新: {lastUpdateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
                     </CardDescription>
                   </div>
                 </div>
@@ -471,8 +532,55 @@ export function Dashboard() {
                   </div>
                 </div>
                 
-                {/* APIテストボタン（右側） */}
-                <div className="flex justify-end">
+                {/* APIテストボタンと更新ボタン（右側） */}
+                <div className="flex justify-end gap-2">
+                  {/* Google Sheets監視ボタン */}
+                  <Button
+                    onClick={toggleMonitoring}
+                    className={`relative group h-10 px-3 overflow-hidden rounded-lg transition-all duration-300`}
+                    variant="outline"
+                  >
+                    <div className={`absolute inset-0 transition-all duration-300 ${isMonitoring ? 'bg-gradient-to-r from-green-400 to-green-500 animate-pulse' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}></div>
+                    <div className="relative flex items-center gap-2 text-white font-semibold">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      {isMonitoring ? 'Sheets監視中' : 'Sheets監視OFF'}
+                    </div>
+                  </Button>
+                  
+                  {/* 自動更新トグル */}
+                  <Button
+                    onClick={() => setAutoRefresh(!autoRefresh)}
+                    className={`relative group h-10 px-3 overflow-hidden rounded-lg transition-all duration-300`}
+                    variant="outline"
+                  >
+                    <div className={`absolute inset-0 transition-all duration-300 ${autoRefresh ? 'bg-gradient-to-r from-blue-400 to-blue-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}></div>
+                    <div className="relative flex items-center gap-2 text-white font-semibold">
+                      <svg className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      {autoRefresh ? '自動更新ON' : '自動更新OFF'}
+                    </div>
+                  </Button>
+                  
+                  {/* 手動更新ボタン */}
+                  <Button
+                    onClick={handleRefresh}
+                    disabled={isChartLoading}
+                    className="relative group h-10 px-3 overflow-hidden rounded-lg transition-all duration-300"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-700 transition-all duration-300 group-hover:from-purple-500 group-hover:to-purple-600"></div>
+                    <div className="relative flex items-center gap-2 text-white font-semibold">
+                      <svg className={`w-4 h-4 ${isChartLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      {isChartLoading ? '更新中...' : '更新'}
+                    </div>
+                  </Button>
+                  
+                  {/* APIテストボタン */}
                   <Button
                     onClick={handleApiTest}
                     className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
