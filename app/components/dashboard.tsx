@@ -242,7 +242,7 @@ export function Dashboard() {
           message += `⏱️ 全ユーザーの稼働時間一覧（${timeData.summary.length}人）\n`;
           message += `════════════════════════════════\n`;
           
-          timeData.summary.forEach((user, index) => {
+          timeData.summary.forEach((user: any, index: number) => {
             const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${(index + 1).toString().padStart(2, ' ')}.`;
             const timeStr = user.total_time || '0時間0分';
             const daysStr = user.work_days > 0 ? `${user.work_days}日` : '未勤務';
@@ -284,7 +284,7 @@ export function Dashboard() {
         if (users.length > 0) {
           message += `👥 登録ユーザー詳細（全${users.length}人）\n`;
           message += `════════════════════════════════\n`;
-          users.forEach((user, index) => {
+          users.forEach((user: any, index: number) => {
             message += `${(index + 1).toString().padStart(2, ' ')}. ${user.name}\n`;
             message += `    ID: ${user.employee_id}\n`;
             message += `    📧 ${user.email}\n`;
@@ -514,23 +514,8 @@ export function Dashboard() {
                   </div>
                 </div>
                 
-                {/* 累計時間表示（中央） */}
-                <div className="flex gap-3 justify-center">
-                  <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg blur opacity-60 group-hover:opacity-80 transition duration-300"></div>
-                    <div className="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-md rounded-lg px-4 py-2 border-2 border-blue-300 dark:border-blue-500 shadow-lg transition-all duration-300">
-                      <div className="text-sm text-blue-700 dark:text-blue-300 font-bold text-center mb-0.5">今日累計</div>
-                      <div className="text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 dark:from-blue-300 dark:to-blue-400 bg-clip-text text-transparent">0:00</div>
-                    </div>
-                  </div>
-                  <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg blur opacity-60 group-hover:opacity-80 transition duration-300"></div>
-                    <div className="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-md rounded-lg px-4 py-2 border-2 border-purple-300 dark:border-purple-500 shadow-lg transition-all duration-300">
-                      <div className="text-sm text-purple-700 dark:text-purple-300 font-bold text-center mb-0.5">今月累計</div>
-                      <div className="text-xl font-bold bg-gradient-to-r from-purple-700 to-purple-800 dark:from-purple-300 dark:to-purple-400 bg-clip-text text-transparent">0:00</div>
-                    </div>
-                  </div>
-                </div>
+                {/* 中央スペース */}
+                <div></div>
                 
                 {/* APIテストボタンと更新ボタン（右側） */}
                 <div className="flex justify-end gap-2">
@@ -664,7 +649,7 @@ export function Dashboard() {
                             const dayData = [];
                             
                             for (const entry of payload) {
-                              if (entry.value !== null && entry.value !== undefined && entry.value > 0) {
+                              if (entry.value !== null && entry.value !== undefined && typeof entry.value === 'number' && entry.value > 0) {
                                 dayData.push(entry);
                               }
                             }

@@ -87,8 +87,10 @@ async def get_subpage_data(
                         "work_days": 0,
                         "users": set()
                     }
-                monthly_data[month_key]["total_minutes"] += month_info["total_minutes"]
-                monthly_data[month_key]["work_days"] += month_info["work_days"]
+                # month_info には hours と minutes があるので、total_minutes を計算
+                total_minutes = month_info.get("hours", 0) * 60 + month_info.get("minutes", 0)
+                monthly_data[month_key]["total_minutes"] += total_minutes
+                monthly_data[month_key]["work_days"] += month_info.get("work_days", 0)
                 monthly_data[month_key]["users"].add(user_name)
         
         # 月別データをリストに変換（直近N月分）
@@ -439,7 +441,8 @@ async def get_ranking(
             for user_name, data in user_time_data.items():
                 month_data = data.get("monthly_hours", {}).get(current_month, {})
                 if month_data:
-                    total_minutes = month_data.get("total_minutes", 0)
+                    # month_data には hours と minutes があるので、total_minutes を計算
+                    total_minutes = month_data.get("hours", 0) * 60 + month_data.get("minutes", 0)
                     ranking_data.append({
                         "name": user_name,
                         "total_minutes": total_minutes,
