@@ -50,6 +50,7 @@ export default function Page2() {
   const [isLoading, setIsLoading] = useState(false);
   const [subpageData, setSubpageData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dataError, setDataError] = useState<string | null>(null);
   const [monthlyChartData, setMonthlyChartData] = useState<any[]>([]);
   const [userMonthlyData, setUserMonthlyData] = useState<any[]>([]);
   const [userConfigs, setUserConfigs] = useState<any>({});
@@ -153,20 +154,32 @@ export default function Page2() {
 
   const fetchUserMonthlyData = async () => {
     try {
+      setDataError(null);
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      console.log('Fetching user monthly data from:', `${apiUrl}/subpage/monthly-by-user?top_users=15&months=12`);
+      
       const response = await fetch(`${apiUrl}/subpage/monthly-by-user?top_users=15&months=12`);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('User monthly data received:', data);
+        
         if (data.success) {
-          setUserMonthlyData(data.chart_data);
-          setUserConfigs(data.user_configs);
+          setUserMonthlyData(data.chart_data || []);
+          setUserConfigs(data.user_configs || {});
           // デフォルトで全ユーザーを選択
-          setSelectedUsers(Object.keys(data.user_configs));
+          const userKeys = Object.keys(data.user_configs || {});
+          setSelectedUsers(userKeys);
+          console.log('Selected users:', userKeys);
+        } else {
+          setDataError('データの取得に失敗しました');
         }
+      } else {
+        setDataError(`サーバーエラー: ${response.status}`);
       }
     } catch (error) {
       console.error('ユーザー別月別データ取得エラー:', error);
+      setDataError(error instanceof Error ? error.message : 'データ取得エラー');
     }
   };
 
@@ -239,7 +252,24 @@ export default function Page2() {
             </div>
           </CardHeader>
           <CardContent className="p-2 flex-1 overflow-hidden">
+            {dataError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                <strong>エラー:</strong> {dataError}
+              </div>
+            )}
             <div className="w-full h-full">
+              {console.log('Chart data:', userMonthlyData, 'Selected users:', selectedUsers)}
+              {userMonthlyData.length === 0 && !isLoading && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="text-gray-500 mb-4">データを読み込み中...</p>
+                    <Button onClick={fetchUserMonthlyData} variant="outline">
+                      データを再読み込み
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {userMonthlyData.length > 0 && (
               <ChartContainer config={chartConfig} className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
@@ -284,24 +314,64 @@ export default function Page2() {
                       <Label value="月別勤務時間" angle={-90} position="insideLeft" style={{ fontSize: 13, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
                     </YAxis>
                     <ChartTooltip
-                      cursor={false}
+                      cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
                       content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
+                        if (active && payload && payload.length > 0) {
+                          // その月の全ユーザーのデータを取得（値がある場合のみ）
+                          const monthData = [];
+                          
+                          for (const entry of payload) {
+                            if (entry.value !== null && entry.value !== undefined && entry.value > 0) {
+                              monthData.push(entry);
+                            }
+                          }
+                          
+                          if (monthData.length === 0) return null;
+                          
+                          // 値でソート（降順）
+                          monthData.sort((a: any, b: any) => b.value - a.value);
+                          
+                          // 合計時間を計算
+                          const totalHours = monthData.reduce((sum: number, entry: any) => 
+                            sum + (entry.value || 0), 0
+                          );
+                          
                           return (
-                            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-                              <p className="text-sm font-semibold mb-2">{label}</p>
-                              {payload.map((entry: any, index: number) => {
-                                const formattedKey = `${entry.dataKey}_formatted`;
-                                const formattedValue = entry.payload[formattedKey];
-                                if (entry.value !== null && entry.value > 0) {
+                            <div className="bg-white/95 dark:bg-gray-800/95 p-3 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm max-h-[350px] overflow-y-auto min-w-[200px]">
+                              <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2 sticky top-0 bg-white/95 dark:bg-gray-800/95">
+                                {label}
+                              </p>
+                              <div className="space-y-1">
+                                {monthData.map((entry: any, index: number) => {
+                                  const formattedKey = `${entry.dataKey}_formatted`;
+                                  const formattedValue = entry.payload[formattedKey];
+                                  
                                   return (
-                                    <p key={index} className="text-xs py-0.5" style={{ color: entry.color }}>
-                                      {entry.dataKey}: {formattedValue || `${Math.round(entry.value)}時間`}
-                                    </p>
+                                    <div key={entry.dataKey} className="flex items-center justify-between text-xs py-0.5">
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 w-4">{index + 1}.</span>
+                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
+                                        <span className="font-medium truncate max-w-[120px]">{entry.dataKey}:</span>
+                                      </span>
+                                      <span className="font-bold ml-2">{formattedValue || `${entry.value.toFixed(1)}時間`}</span>
+                                    </div>
                                   );
-                                }
-                                return null;
-                              })}
+                                })}
+                              </div>
+                              {monthData.length > 1 && (
+                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="font-medium text-gray-600 dark:text-gray-400">月間合計:</span>
+                                    <span className="font-bold text-gray-800 dark:text-gray-200">
+                                      {totalHours.toFixed(1)}時間
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                                    <span>平均/人:</span>
+                                    <span>{(totalHours / monthData.length).toFixed(1)}時間</span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           );
                         }
@@ -320,8 +390,18 @@ export default function Page2() {
                           dataKey={userName}
                           stroke={config.color}
                           strokeWidth={2}
-                          dot={{ r: 3, fill: config.color }}
-                          activeDot={{ r: 5 }}
+                          dot={{ 
+                            r: 4, 
+                            fill: config.color, 
+                            strokeWidth: 1, 
+                            stroke: "white"
+                          }}
+                          activeDot={{ 
+                            r: 6, 
+                            strokeWidth: 2, 
+                            stroke: config.color, 
+                            fill: "white"
+                          }}
                           connectNulls={false}
                         />
                       );
@@ -329,6 +409,7 @@ export default function Page2() {
                   </LineChart>
                 </ResponsiveContainer>
               </ChartContainer>
+              )}
             </div>
             
             {/* ユーザー凡例 */}
