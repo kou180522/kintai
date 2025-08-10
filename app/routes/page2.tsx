@@ -126,7 +126,7 @@ export default function Page2() {
         // TOP5ユーザー
         if (data.users_summary && data.users_summary.length > 0) {
           message += '【勤務時間TOP5】\n';
-          data.users_summary.slice(0, 5).forEach((user, index) => {
+          data.users_summary.slice(0, 5).forEach((user: any, index: number) => {
             const emoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
             message += `${emoji} ${user.name}: ${user.total_time_formatted} (${user.work_days}日)\n`;
           });
@@ -136,7 +136,7 @@ export default function Page2() {
         // 月別サマリー（最新3ヶ月）
         if (data.monthly_summary && data.monthly_summary.length > 0) {
           message += '【月別勤務時間（最新3ヶ月）】\n';
-          data.monthly_summary.slice(0, 3).forEach(month => {
+          data.monthly_summary.slice(0, 3).forEach((month: any) => {
             message += `${month.month}: ${month.total_time_formatted} (${month.users_count}人)\n`;
           });
         }
@@ -258,7 +258,7 @@ export default function Page2() {
               </div>
             )}
             <div className="w-full h-full">
-              {console.log('Chart data:', userMonthlyData, 'Selected users:', selectedUsers)}
+              {/* console.log('Chart data:', userMonthlyData, 'Selected users:', selectedUsers) */}
               {userMonthlyData.length === 0 && !isLoading && (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -321,7 +321,7 @@ export default function Page2() {
                           const monthData = [];
                           
                           for (const entry of payload) {
-                            if (entry.value !== null && entry.value !== undefined && entry.value > 0) {
+                            if (entry.value !== null && entry.value !== undefined && typeof entry.value === 'number' && entry.value > 0) {
                               monthData.push(entry);
                             }
                           }
