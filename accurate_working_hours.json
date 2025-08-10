@@ -1,0 +1,474 @@
+{
+  "calculation_time": "2025-08-11T03:00:17.409962",
+  "total_records": 2349,
+  "total_users": 15,
+  "active_users": 13,
+  "statistics": {
+    "total_working_minutes": 161850,
+    "total_working_hours": "2697時間30分",
+    "total_work_days": 616,
+    "average_per_user": "207時間30分"
+  },
+  "user_details": [
+    {
+      "rank": 1,
+      "name": "theoj246",
+      "total_minutes": 78960,
+      "total_time": "1316時間0分",
+      "work_days": 248,
+      "average_per_day": "5時間18分",
+      "monthly_hours": {
+        "2024/09": {
+          "hours": 67,
+          "minutes": 12,
+          "formatted": "67時間12分",
+          "work_minutes": 4032
+        },
+        "2024/10": {
+          "hours": 112,
+          "minutes": 20,
+          "formatted": "112時間20分",
+          "work_minutes": 6740
+        },
+        "2024/11": {
+          "hours": 131,
+          "minutes": 45,
+          "formatted": "131時間45分",
+          "work_minutes": 7905
+        },
+        "2024/12": {
+          "hours": 126,
+          "minutes": 41,
+          "formatted": "126時間41分",
+          "work_minutes": 7601
+        },
+        "2025/01": {
+          "hours": 106,
+          "minutes": 57,
+          "formatted": "106時間57分",
+          "work_minutes": 6417
+        },
+        "2025/02": {
+          "hours": 86,
+          "minutes": 20,
+          "formatted": "86時間20分",
+          "work_minutes": 5180
+        },
+        "2025/03": {
+          "hours": 152,
+          "minutes": 55,
+          "formatted": "152時間55分",
+          "work_minutes": 9175
+        },
+        "2025/04": {
+          "hours": 151,
+          "minutes": 53,
+          "formatted": "151時間53分",
+          "work_minutes": 9113
+        },
+        "2025/05": {
+          "hours": 150,
+          "minutes": 17,
+          "formatted": "150時間17分",
+          "work_minutes": 9017
+        },
+        "2025/06": {
+          "hours": 102,
+          "minutes": 24,
+          "formatted": "102時間24分",
+          "work_minutes": 6144
+        },
+        "2025/07": {
+          "hours": 80,
+          "minutes": 37,
+          "formatted": "80時間37分",
+          "work_minutes": 4837
+        },
+        "2025/08": {
+          "hours": 46,
+          "minutes": 39,
+          "formatted": "46時間39分",
+          "work_minutes": 2799
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "name": "ryo4ryo4n66",
+      "total_minutes": 40834,
+      "total_time": "680時間34分",
+      "work_days": 159,
+      "average_per_day": "4時間16分",
+      "monthly_hours": {
+        "2024/09": {
+          "hours": 26,
+          "minutes": 59,
+          "formatted": "26時間59分",
+          "work_minutes": 1619
+        },
+        "2024/10": {
+          "hours": 8,
+          "minutes": 23,
+          "formatted": "8時間23分",
+          "work_minutes": 503
+        },
+        "2024/11": {
+          "hours": 8,
+          "minutes": 56,
+          "formatted": "8時間56分",
+          "work_minutes": 536
+        },
+        "2024/12": {
+          "hours": 16,
+          "minutes": 32,
+          "formatted": "16時間32分",
+          "work_minutes": 992
+        },
+        "2025/01": {
+          "hours": 3,
+          "minutes": 5,
+          "formatted": "3時間5分",
+          "work_minutes": 185
+        },
+        "2025/02": {
+          "hours": 57,
+          "minutes": 37,
+          "formatted": "57時間37分",
+          "work_minutes": 3457
+        },
+        "2025/03": {
+          "hours": 122,
+          "minutes": 17,
+          "formatted": "122時間17分",
+          "work_minutes": 7337
+        },
+        "2025/04": {
+          "hours": 104,
+          "minutes": 45,
+          "formatted": "104時間45分",
+          "work_minutes": 6285
+        },
+        "2025/05": {
+          "hours": 90,
+          "minutes": 10,
+          "formatted": "90時間10分",
+          "work_minutes": 5410
+        },
+        "2025/06": {
+          "hours": 90,
+          "minutes": 55,
+          "formatted": "90時間55分",
+          "work_minutes": 5455
+        },
+        "2025/07": {
+          "hours": 114,
+          "minutes": 42,
+          "formatted": "114時間42分",
+          "work_minutes": 6882
+        },
+        "2025/08": {
+          "hours": 36,
+          "minutes": 13,
+          "formatted": "36時間13分",
+          "work_minutes": 2173
+        }
+      }
+    },
+    {
+      "rank": 3,
+      "name": "hinako.tsutsumi2525",
+      "total_minutes": 7675,
+      "total_time": "127時間55分",
+      "work_days": 41,
+      "average_per_day": "3時間7分",
+      "monthly_hours": {
+        "2025/05": {
+          "hours": 0,
+          "minutes": 1,
+          "formatted": "0時間1分",
+          "work_minutes": 1
+        },
+        "2025/06": {
+          "hours": 50,
+          "minutes": 42,
+          "formatted": "50時間42分",
+          "work_minutes": 3042
+        },
+        "2025/07": {
+          "hours": 64,
+          "minutes": 49,
+          "formatted": "64時間49分",
+          "work_minutes": 3889
+        },
+        "2025/08": {
+          "hours": 12,
+          "minutes": 23,
+          "formatted": "12時間23分",
+          "work_minutes": 743
+        }
+      }
+    },
+    {
+      "rank": 4,
+      "name": "kimoppy126",
+      "total_minutes": 6682,
+      "total_time": "111時間22分",
+      "work_days": 16,
+      "average_per_day": "6時間57分",
+      "monthly_hours": {
+        "2025/02": {
+          "hours": 5,
+          "minutes": 57,
+          "formatted": "5時間57分",
+          "work_minutes": 357
+        },
+        "2025/03": {
+          "hours": 22,
+          "minutes": 45,
+          "formatted": "22時間45分",
+          "work_minutes": 1365
+        },
+        "2025/04": {
+          "hours": 58,
+          "minutes": 2,
+          "formatted": "58時間2分",
+          "work_minutes": 3482
+        },
+        "2025/05": {
+          "hours": 3,
+          "minutes": 23,
+          "formatted": "3時間23分",
+          "work_minutes": 203
+        },
+        "2025/06": {
+          "hours": 14,
+          "minutes": 28,
+          "formatted": "14時間28分",
+          "work_minutes": 868
+        },
+        "2025/07": {
+          "hours": 6,
+          "minutes": 47,
+          "formatted": "6時間47分",
+          "work_minutes": 407
+        }
+      }
+    },
+    {
+      "rank": 5,
+      "name": "kouki0802.ao",
+      "total_minutes": 6030,
+      "total_time": "100時間30分",
+      "work_days": 36,
+      "average_per_day": "2時間47分",
+      "monthly_hours": {
+        "2025/06": {
+          "hours": 8,
+          "minutes": 49,
+          "formatted": "8時間49分",
+          "work_minutes": 529
+        },
+        "2025/07": {
+          "hours": 60,
+          "minutes": 17,
+          "formatted": "60時間17分",
+          "work_minutes": 3617
+        },
+        "2025/08": {
+          "hours": 31,
+          "minutes": 24,
+          "formatted": "31時間24分",
+          "work_minutes": 1884
+        }
+      }
+    },
+    {
+      "rank": 6,
+      "name": "deerveryone",
+      "total_minutes": 5832,
+      "total_time": "97時間12分",
+      "work_days": 39,
+      "average_per_day": "2時間29分",
+      "monthly_hours": {
+        "2024/07": {
+          "hours": 13,
+          "minutes": 53,
+          "formatted": "13時間53分",
+          "work_minutes": 833
+        },
+        "2024/08": {
+          "hours": 37,
+          "minutes": 49,
+          "formatted": "37時間49分",
+          "work_minutes": 2269
+        },
+        "2024/09": {
+          "hours": 45,
+          "minutes": 30,
+          "formatted": "45時間30分",
+          "work_minutes": 2730
+        }
+      }
+    },
+    {
+      "rank": 7,
+      "name": "ujwal.kumar252725",
+      "total_minutes": 3966,
+      "total_time": "66時間6分",
+      "work_days": 9,
+      "average_per_day": "7時間20分",
+      "monthly_hours": {
+        "2025/05": {
+          "hours": 3,
+          "minutes": 54,
+          "formatted": "3時間54分",
+          "work_minutes": 234
+        },
+        "2025/06": {
+          "hours": 59,
+          "minutes": 0,
+          "formatted": "59時間0分",
+          "work_minutes": 3540
+        },
+        "2025/07": {
+          "hours": 3,
+          "minutes": 12,
+          "formatted": "3時間12分",
+          "work_minutes": 192
+        }
+      }
+    },
+    {
+      "rank": 8,
+      "name": "osaryo523778",
+      "total_minutes": 3015,
+      "total_time": "50時間15分",
+      "work_days": 27,
+      "average_per_day": "1時間51分",
+      "monthly_hours": {
+        "2024/10": {
+          "hours": 18,
+          "minutes": 40,
+          "formatted": "18時間40分",
+          "work_minutes": 1120
+        },
+        "2024/11": {
+          "hours": 19,
+          "minutes": 33,
+          "formatted": "19時間33分",
+          "work_minutes": 1173
+        },
+        "2024/12": {
+          "hours": 9,
+          "minutes": 59,
+          "formatted": "9時間59分",
+          "work_minutes": 599
+        },
+        "2025/01": {
+          "hours": 2,
+          "minutes": 3,
+          "formatted": "2時間3分",
+          "work_minutes": 123
+        }
+      }
+    },
+    {
+      "rank": 9,
+      "name": "lyuki093",
+      "total_minutes": 2702,
+      "total_time": "45時間2分",
+      "work_days": 4,
+      "average_per_day": "11時間15分",
+      "monthly_hours": {
+        "2024/07": {
+          "hours": 45,
+          "minutes": 2,
+          "formatted": "45時間2分",
+          "work_minutes": 2702
+        }
+      }
+    },
+    {
+      "rank": 10,
+      "name": "Yohei Watanabe",
+      "total_minutes": 2669,
+      "total_time": "44時間29分",
+      "work_days": 16,
+      "average_per_day": "2時間46分",
+      "monthly_hours": {
+        "2024/06": {
+          "hours": 20,
+          "minutes": 51,
+          "formatted": "20時間51分",
+          "work_minutes": 1251
+        },
+        "2024/07": {
+          "hours": 23,
+          "minutes": 38,
+          "formatted": "23時間38分",
+          "work_minutes": 1418
+        }
+      }
+    },
+    {
+      "rank": 11,
+      "name": "erin.isozu",
+      "total_minutes": 2085,
+      "total_time": "34時間45分",
+      "work_days": 12,
+      "average_per_day": "2時間53分",
+      "monthly_hours": {
+        "2025/07": {
+          "hours": 8,
+          "minutes": 14,
+          "formatted": "8時間14分",
+          "work_minutes": 494
+        },
+        "2025/08": {
+          "hours": 26,
+          "minutes": 31,
+          "formatted": "26時間31分",
+          "work_minutes": 1591
+        }
+      }
+    },
+    {
+      "rank": 12,
+      "name": "marikou180522",
+      "total_minutes": 1164,
+      "total_time": "19時間24分",
+      "work_days": 4,
+      "average_per_day": "4時間51分",
+      "monthly_hours": {
+        "2025/08": {
+          "hours": 19,
+          "minutes": 24,
+          "formatted": "19時間24分",
+          "work_minutes": 1164
+        }
+      }
+    },
+    {
+      "rank": 13,
+      "name": "yuta.takasu",
+      "total_minutes": 236,
+      "total_time": "3時間56分",
+      "work_days": 5,
+      "average_per_day": "0時間47分",
+      "monthly_hours": {
+        "2025/07": {
+          "hours": 2,
+          "minutes": 0,
+          "formatted": "2時間0分",
+          "work_minutes": 120
+        },
+        "2025/08": {
+          "hours": 1,
+          "minutes": 56,
+          "formatted": "1時間56分",
+          "work_minutes": 116
+        }
+      }
+    }
+  ]
+}

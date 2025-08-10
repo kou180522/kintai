@@ -104,11 +104,10 @@ class CSVLoader:
                 return user
         return None
     
-    def parse_status_with_adjustment(self, status: str, message: str, time: str):
+    def parse_status_with_adjustment(self, status: str, time: str):
         """
         ステータスコードを解析して調整時間を取得
         s+90 のような形式から調整分数を抽出
-        messageフィールドも確認して調整時間を取得
         """
         if not status or not time:
             return None, None, 0
@@ -116,33 +115,15 @@ class CSVLoader:
         status_lower = status.lower()
         adjustment_minutes = 0
         
-        # messageフィールドにs+XXまたはf+XXパターンがある場合を優先
-        if message:
-            message_lower = message.lower()
-            if '+' in message_lower or '-' in message_lower:
-                # s+60, f+30, f-20 などのパターンを探す
-                import re
-                match = re.search(r'([sf])([\+\-])(\d+)', message_lower)
-                if match:
-                    sign = match.group(2)
-                    value = int(match.group(3))
-                    adjustment_minutes = value if sign == '+' else -value
-                    # messageから基本ステータスも取得
-                    if match.group(1) == 's':
-                        status_lower = 's'
-                    elif match.group(1) == 'f':
-                        status_lower = 'f'
-                    print(f"メッセージから調整検出: {message} → {adjustment_minutes}分調整")
-        
-        # messageに調整情報がない場合はstatusフィールドをチェック
-        elif '+' in status_lower or '-' in status_lower:
-            import re
-            match = re.search(r'([sf])([\+\-])(\d+)', status_lower)
-            if match:
-                sign = match.group(2)
-                value = int(match.group(3))
-                adjustment_minutes = value if sign == '+' else -value
-                status_lower = match.group(1)
+        # s+XX または f+XX パターンの処理
+        if '+' in status_lower:
+            parts = status_lower.split('+')
+            if len(parts) == 2:
+                try:
+                    adjustment_minutes = int(parts[1])
+                    status_lower = parts[0]
+                except ValueError:
+                    pass
         
         # 基本ステータスの判定
         if status_lower in ["開始", "s", "start"]:
@@ -163,32 +144,26 @@ class CSVLoader:
                     # 開始時刻を早める（s+90 = 90分前から勤務開始）
                     total_minutes = hours * 60 + minutes - adjustment_minutes
                 else:
-                    # 終了時刻を遅らせる（f+30 = 30分後まで勤務、f-20 = 20分前に終了）
+                    # 終了時刻を遅らせる（f+30 = 30分後まで勤務）
                     total_minutes = hours * 60 + minutes + adjustment_minutes
                 
-                # 負の値の場合の処理
-                if total_minutes < 0:
-                    # 前日の時刻として計算
-                    adjusted_hours = 24 + (total_minutes // 60)
-                    adjusted_minutes = total_minutes % 60
-                    if adjusted_minutes < 0:
-                        adjusted_hours -= 1
-                        adjusted_minutes = 60 + adjusted_minutes
+                # 時刻を再計算
+                adjusted_hours = total_minutes // 60
+                adjusted_minutes = total_minutes % 60
+                
+                # 日付の調整が必要な場合の処理
+                date_adjustment = 0
+                if adjusted_hours < 0:
+                    adjusted_hours += 24
                     date_adjustment = -1
-                elif total_minutes >= 24 * 60:
-                    # 翌日の時刻として計算
-                    adjusted_hours = (total_minutes // 60) % 24
-                    adjusted_minutes = total_minutes % 60
+                elif adjusted_hours >= 24:
+                    adjusted_hours -= 24
                     date_adjustment = 1
-                else:
-                    adjusted_hours = total_minutes // 60
-                    adjusted_minutes = total_minutes % 60
-                    date_adjustment = 0
                 
                 adjusted_time = f"{adjusted_hours:02d}:{adjusted_minutes:02d}"
                 return base_status, adjusted_time, date_adjustment
-        except Exception as e:
-            print(f"時刻パースエラー: {e}")
+        except:
+            pass
         
         return base_status, time, 0
     
@@ -208,15 +183,11 @@ class CSVLoader:
             status = record.get("status", "")
             message = record.get("message", "")
             
-            # ステータスと調整時間を解析（messageフィールドも渡す）
-            base_status, adjusted_time, date_adjustment = self.parse_status_with_adjustment(status, message, time)
+            # ステータスと調整時間を解析
+            base_status, adjusted_time, date_adjustment = self.parse_status_with_adjustment(status, time)
             
             if not base_status:
                 continue
-            
-            # 調整がある場合はログ出力
-            if time != adjusted_time and message:
-                print(f"調整検出: {user_name} {date} {time} {message} → {adjusted_time}")
             
             # 日付調整が必要な場合
             adjusted_date = date
@@ -249,7 +220,6 @@ class CSVLoader:
                     "name": user_name,
                     "total_hours": 0,
                     "total_minutes": 0,
-                    "total_time_formatted": "0時間0分",
                     "work_days": 0,
                     "records": [],
                     "daily_hours": {},  # 日別勤務時間
@@ -382,11 +352,8 @@ class CSVLoader:
             
             # 合計を計算
             total_minutes = sum(session["work_minutes"] for session in work_sessions)
-            total_hours = total_minutes // 60
-            remaining_minutes = total_minutes % 60
-            user_time_data[user_name]["total_minutes"] = remaining_minutes  # 60分未満の端数
-            user_time_data[user_name]["total_hours"] = total_hours  # 整数時間
-            user_time_data[user_name]["total_time_formatted"] = f"{total_hours}時間{remaining_minutes}分"
+            user_time_data[user_name]["total_minutes"] = total_minutes
+            user_time_data[user_name]["total_hours"] = total_minutes / 60
             user_time_data[user_name]["work_days"] = len(user_time_data[user_name]["daily_hours"])
             
             # フォーマット済み文字列を生成

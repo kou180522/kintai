@@ -657,28 +657,67 @@ export function Dashboard() {
                         <Label value="勤務時間" angle={-90} position="insideLeft" style={{ fontSize: 12, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
                       </YAxis>
                       <ChartTooltip
-                        cursor={false}
+                        cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
                         content={({ active, payload, label }) => {
-                          if (active && payload && payload.length) {
+                          if (active && payload && payload.length > 0) {
+                            // その日の全ユーザーのデータを取得（値がある場合のみ）
+                            const dayData = [];
+                            
+                            for (const entry of payload) {
+                              if (entry.value !== null && entry.value !== undefined && entry.value > 0) {
+                                dayData.push(entry);
+                              }
+                            }
+                            
+                            if (dayData.length === 0) return null;
+                            
+                            // 値でソート（降順）
+                            dayData.sort((a: any, b: any) => b.value - a.value);
+                            
+                            // 合計時間を計算
+                            const totalHours = dayData.reduce((sum: number, entry: any) => 
+                              sum + (entry.value || 0), 0
+                            );
+                            
                             return (
-                              <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-                                <p className="text-sm font-semibold mb-1">{label}</p>
-                                {payload.map((entry: any, index: number) => {
-                                  const formattedKey = `${entry.dataKey}_formatted`
-                                  const formattedValue = entry.payload[formattedKey]
-                                  if (entry.value !== null && entry.value !== undefined) {
+                              <div className="bg-white/95 dark:bg-gray-800/95 p-3 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm max-h-[300px] overflow-y-auto">
+                                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2 sticky top-0 bg-white/95 dark:bg-gray-800/95">
+                                  {label}
+                                </p>
+                                <div className="space-y-1">
+                                  {dayData.map((entry: any, index: number) => {
+                                    const formattedKey = `${entry.dataKey}_formatted`;
+                                    const formattedValue = entry.payload[formattedKey];
+                                    
                                     return (
-                                      <p key={index} className="text-xs" style={{ color: entry.color }}>
-                                        {entry.dataKey}: {formattedValue || `${entry.value}時間`}
-                                      </p>
-                                    )
-                                  }
-                                  return null
-                                })}
+                                      <div key={entry.dataKey} className="flex items-center justify-between text-xs py-0.5">
+                                        <span className="flex items-center gap-1.5">
+                                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
+                                          <span className="font-medium">{entry.dataKey}:</span>
+                                        </span>
+                                        <span className="font-bold ml-2">{formattedValue || `${entry.value.toFixed(1)}時間`}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {dayData.length > 1 && (
+                                  <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="font-medium text-gray-600 dark:text-gray-400">合計:</span>
+                                      <span className="font-bold text-gray-800 dark:text-gray-200">
+                                        {totalHours.toFixed(1)}時間
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                                      <span>人数:</span>
+                                      <span>{dayData.length}人</span>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )
+                            );
                           }
-                          return null
+                          return null;
                         }}
                       />
                       {/* 動的にユーザーごとのLineを生成 */}
@@ -713,9 +752,19 @@ export function Dashboard() {
                             dataKey={userName}
                             stroke={color}
                             strokeWidth={1.5}
-                            dot={{ r: 2, fill: color, strokeWidth: 0.5, stroke: "white" }}
+                            dot={{ 
+                              r: 3, 
+                              fill: color, 
+                              strokeWidth: 1, 
+                              stroke: "white"
+                            }}
                             connectNulls={true}
-                            activeDot={{ r: 5, strokeWidth: 0 }}
+                            activeDot={{ 
+                              r: 6, 
+                              strokeWidth: 2, 
+                              stroke: color, 
+                              fill: "white"
+                            }}
                           />
                         )
                       })}
