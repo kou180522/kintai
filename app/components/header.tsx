@@ -16,7 +16,7 @@ export function Header() {
         {/* 中央のロゴ */}
         <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-lg"></div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">TimeSync Pro</span>
+          <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">勤怠Pro</span>
         </Link>
         
         {/* 右側のボタン */}
