@@ -10,7 +10,7 @@ from collections import defaultdict
 
 class CSVLoader:
     def __init__(self):
-        self.csv_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "attendance_data.csv")
+        self.csv_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "attendance_data.csv")
         self.users = []
         self.attendance_records = []
         self.last_loaded = None
