@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "~/components/ui/card"
 import { Button } from "~/components/ui/button"
-import { Textarea } from "~/components/ui/textarea"
 import type { ChartConfig } from "~/components/ui/chart"
 import {
   ChartContainer,
@@ -28,7 +27,6 @@ const initialChartConfig = {} satisfies ChartConfig
 
 export function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [comment, setComment] = useState("")
   const [chartData, setChartData] = useState(initialChartData)
   const [chartConfig, setChartConfig] = useState<ChartConfig>(initialChartConfig)
   const [isChartLoading, setIsChartLoading] = useState(false)
@@ -125,58 +123,6 @@ export function Dashboard() {
     })
   }
 
-  const handleClockIn = async () => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
-      const response = await fetch(`${apiUrl}/attendance/clock-in`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          timestamp: currentTime.toISOString(),
-          comment: comment
-        }),
-      });
-      
-      const data = await response.json();
-      console.log("出勤打刻:", formatTime(currentTime), "コメント:", comment);
-      alert('出勤打刻が完了しました');
-      setComment('');
-    } catch (error) {
-      console.error('出勤打刻エラー:', error);
-      alert('出勤打刻に失敗しました');
-    }
-  }
-
-  const handleClockOut = async () => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
-      const response = await fetch(`${apiUrl}/attendance/clock-out`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          timestamp: currentTime.toISOString(),
-          comment: comment
-        }),
-      });
-      
-      const data = await response.json();
-      console.log("退勤打刻:", formatTime(currentTime), "コメント:", comment);
-      alert('退勤打刻が完了しました');
-      setComment('');
-    } catch (error) {
-      console.error('退勤打刻エラー:', error);
-      alert('退勤打刻に失敗しました');
-    }
-  }
-
-  const handleCommentSubmit = () => {
-    console.log("コメント送信:", comment)
-    setComment("") // 送信後にコメントをクリア
-  }
 
 
   // アナログ時計用の計算
@@ -202,10 +148,10 @@ export function Dashboard() {
         <div className="flex flex-col gap-0 h-full">
           {/* 統合カード */}
           <Card className="w-full shadow-2xl border-0 bg-white/80 dark:bg-black/40 backdrop-blur-xl overflow-hidden flex flex-col h-full transition-all duration-500 ease-in-out">
-            {/* 打刻セクション */}
+            {/* 時計セクション */}
             <div className="bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/30 dark:to-slate-600/30 backdrop-blur-sm p-1.5 border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
-                <div className="flex gap-3 items-center justify-center md:col-span-1">
+              <div className="flex justify-center items-center">
+                <div className="flex gap-3 items-center justify-center">
                   {/* 時計カード */}
                   <Card className="border-0 bg-white/90 dark:bg-black/50 backdrop-blur-xl shadow-xl transition-all duration-300 hover:shadow-2xl">
                     <CardContent className="p-3">
@@ -303,58 +249,6 @@ export function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-                
-                <div className="md:col-span-3 flex gap-3 items-center">
-                  <div className="grid grid-cols-2 gap-2 flex-grow-0" style={{ minWidth: '280px' }}>
-                    <Button 
-                      onClick={handleClockIn}
-                      className="relative group w-full h-12 text-base font-bold overflow-hidden rounded-lg transition-all duration-300"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-600 dark:to-blue-700 transition-all duration-300 group-hover:from-blue-500 group-hover:to-blue-600 dark:group-hover:from-blue-500 dark:group-hover:to-blue-600"></div>
-                      <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                        </svg>
-                        出勤
-                      </div>
-                    </Button>
-                    <Button 
-                      onClick={handleClockOut}
-                      className="relative group w-full h-12 text-base font-bold overflow-hidden rounded-lg transition-all duration-300"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 dark:from-red-600 dark:to-red-700 transition-all duration-300 group-hover:from-red-500 group-hover:to-red-600 dark:group-hover:from-red-500 dark:group-hover:to-red-600"></div>
-                      <div className="relative flex items-center justify-center gap-2 text-white">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        退勤
-                      </div>
-                    </Button>
-                  </div>
-                  
-                  <div className="relative flex-1 group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400/50 to-purple-400/50 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
-                    <div className="relative">
-                      <Textarea
-                        placeholder="コメント入力 (任意)"
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        className="resize-none bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-600 hover:border-blue-400 dark:hover:border-blue-500 text-gray-900 dark:text-white placeholder:text-blue-400 dark:placeholder:text-blue-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent text-sm h-9 py-2 pr-10 rounded-lg shadow-sm hover:shadow-md w-full transition-all duration-300 ease-in-out"
-                        rows={1}
-                      />
-                      <Button
-                        onClick={handleCommentSubmit}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-md transition-colors duration-200"
-                        variant="ghost"
-                        size="sm"
-                      >
-                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                      </Button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
