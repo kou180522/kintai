@@ -35,7 +35,7 @@ export function Dashboard() {
   const [topUsers, setTopUsers] = useState<string[]>([])
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date())
   const [autoRefresh, setAutoRefresh] = useState(true)
-  const [isMonitoring, setIsMonitoring] = useState(false)
+  const [isMonitoring, setIsMonitoring] = useState(true)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -89,40 +89,23 @@ export function Dashboard() {
     fetchChartData()
   }
 
-  const toggleMonitoring = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-    const endpoint = isMonitoring ? '/monitor/stop' : '/monitor/start'
-    
-    try {
-      const response = await fetch(`${apiUrl}${endpoint}`, {
-        method: 'POST',
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setIsMonitoring(!isMonitoring)
-        console.log('監視状態:', data.message)
-      }
-    } catch (error) {
-      console.error('監視状態変更エラー:', error)
-    }
-  }
 
-  // 起動時に監視状態を確認
+  // 起動時に監視を開始
   useEffect(() => {
-    const checkMonitorStatus = async () => {
+    const startMonitoring = async () => {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001'
       try {
-        const response = await fetch(`${apiUrl}/monitor/status`)
+        const response = await fetch(`${apiUrl}/monitor/start`, {
+          method: 'POST',
+        })
         if (response.ok) {
-          const data = await response.json()
-          setIsMonitoring(data.is_monitoring)
+          console.log('Google Sheets監視を開始しました')
         }
       } catch (error) {
-        console.error('監視状態取得エラー:', error)
+        console.error('監視開始エラー:', error)
       }
     }
-    checkMonitorStatus()
+    startMonitoring()
   }, [])
 
   const formatTime = (date: Date) => {
@@ -195,118 +178,6 @@ export function Dashboard() {
     setComment("") // 送信後にコメントをクリア
   }
 
-  const handleApiTest = async () => {
-    try {
-      // バックエンドのテスト用APIエンドポイントを呼び出す（GETメソッドに変更）
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
-      const fullUrl = `${apiUrl}/test/`;
-      
-      console.log('API呼び出し開始:', fullUrl);
-      
-      const response = await fetch(fullUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json()
-      console.log('APIレスポンス成功:', data)
-      
-      // ユーザー情報と稼働時間を整形して表示
-      if (data.success && data.data) {
-        const users = data.data.users || [];
-        const totalUsers = data.data.total_users || 0;
-        const totalRecords = data.data.total_records || 0;
-        const timeData = data.data.time_data;
-        
-        let message = `✅ APIテスト成功！\n\n`;
-        message += `📊 データ概要\n`;
-        message += `────────────────────\n`;
-        message += `ユーザー総数: ${totalUsers}人\n`;
-        message += `勤怠レコード総数: ${totalRecords}件\n`;
-        
-        // 統計情報
-        if (timeData && timeData.statistics) {
-          message += `総稼働時間: ${timeData.statistics.total_work_time}\n`;
-          message += `アクティブユーザー: ${timeData.statistics.active_users}/${timeData.statistics.total_users}人\n`;
-        }
-        message += `\n`;
-        
-        // 全15人の稼働時間データ
-        if (timeData && timeData.summary && timeData.summary.length > 0) {
-          message += `⏱️ 全ユーザーの稼働時間一覧（${timeData.summary.length}人）\n`;
-          message += `════════════════════════════════\n`;
-          
-          timeData.summary.forEach((user: any, index: number) => {
-            const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${(index + 1).toString().padStart(2, ' ')}.`;
-            const timeStr = user.total_time || '0時間0分';
-            const daysStr = user.work_days > 0 ? `${user.work_days}日` : '未勤務';
-            
-            // 稼働時間がある人は強調
-            if (user.total_hours > 0 || user.total_minutes > 0) {
-              message += `${rankEmoji} ${user.name}\n`;
-              message += `    ⏰ 総計: ${timeStr} / 📅 ${daysStr}\n`;
-              
-              // 月別勤務時間を表示
-              if (user.monthly_hours && Object.keys(user.monthly_hours).length > 0) {
-                message += `    📊 月別勤務時間:\n`;
-                const sortedMonths = Object.keys(user.monthly_hours).sort().reverse();
-                sortedMonths.slice(0, 3).forEach(month => {
-                  const monthData = user.monthly_hours[month];
-                  message += `       ${month}: ${monthData.formatted} (${monthData.work_days}日)\n`;
-                });
-              }
-              
-              // 最近の日別勤務時間を表示（最新3日分）
-              if (user.daily_hours && Object.keys(user.daily_hours).length > 0) {
-                const sortedDates = Object.keys(user.daily_hours).sort().reverse();
-                if (sortedDates.length > 0) {
-                  message += `    📅 最近の勤務:\n`;
-                  sortedDates.slice(0, 3).forEach(date => {
-                    const dayData = user.daily_hours[date];
-                    message += `       ${date}: ${dayData.formatted}\n`;
-                  });
-                }
-              }
-            } else {
-              message += `${rankEmoji} ${user.name}: 稼働記録なし\n`;
-            }
-          });
-          message += `\n`;
-        }
-        
-        // 全ユーザー情報リスト
-        if (users.length > 0) {
-          message += `👥 登録ユーザー詳細（全${users.length}人）\n`;
-          message += `════════════════════════════════\n`;
-          users.forEach((user: any, index: number) => {
-            message += `${(index + 1).toString().padStart(2, ' ')}. ${user.name}\n`;
-            message += `    ID: ${user.employee_id}\n`;
-            message += `    📧 ${user.email}\n`;
-            if (user.department !== "未設定") {
-              message += `    🏢 ${user.department} / ${user.position}\n`;
-            }
-          });
-        }
-        
-        alert(message);
-      } else {
-        alert(`APIテスト成功！\nレスポンス: ${JSON.stringify(data, null, 2)}`)
-      }
-    } catch (error) {
-      console.error('APIエラー詳細:', error)
-      if (error instanceof Error) {
-        alert(`APIテスト失敗: ${error.message}\n\n詳細はブラウザのコンソールを確認してください。`)
-      } else {
-        alert(`APIテスト失敗: ${error}`)
-      }
-    }
-  }
 
   // アナログ時計用の計算
   const hours = currentTime.getHours() % 12
@@ -517,24 +388,8 @@ export function Dashboard() {
                 {/* 中央スペース */}
                 <div></div>
                 
-                {/* APIテストボタンと更新ボタン（右側） */}
+                {/* 更新ボタン（右側） */}
                 <div className="flex justify-end gap-2">
-                  {/* Google Sheets監視ボタン */}
-                  <Button
-                    onClick={toggleMonitoring}
-                    className={`relative group h-10 px-3 overflow-hidden rounded-lg transition-all duration-300`}
-                    variant="outline"
-                  >
-                    <div className={`absolute inset-0 transition-all duration-300 ${isMonitoring ? 'bg-gradient-to-r from-green-400 to-green-500 animate-pulse' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}></div>
-                    <div className="relative flex items-center gap-2 text-white font-semibold">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      {isMonitoring ? 'Sheets監視中' : 'Sheets監視OFF'}
-                    </div>
-                  </Button>
-                  
                   {/* 自動更新トグル */}
                   <Button
                     onClick={() => setAutoRefresh(!autoRefresh)}
@@ -562,20 +417,6 @@ export function Dashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                       {isChartLoading ? '更新中...' : '更新'}
-                    </div>
-                  </Button>
-                  
-                  {/* APIテストボタン */}
-                  <Button
-                    onClick={handleApiTest}
-                    className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-500 dark:from-green-600 dark:to-green-700 transition-all duration-300 group-hover:from-green-500 group-hover:to-green-600 dark:group-hover:from-green-500 dark:group-hover:to-green-600"></div>
-                    <div className="relative flex items-center gap-2 text-white font-semibold">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      APIテスト
                     </div>
                   </Button>
                 </div>

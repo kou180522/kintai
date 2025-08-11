@@ -110,43 +110,10 @@ export default function Page2() {
         setMonthlyChartData(chartData);
       }
       
-      // サマリー情報を表示
-      if (data.success) {
-        let message = '📊 勤務データ更新完了\n\n';
-        
-        // 統計情報
-        if (data.statistics) {
-          message += '【全体統計】\n';
-          message += `総ユーザー数: ${data.statistics.total_users}人\n`;
-          message += `アクティブユーザー: ${data.statistics.active_users}人\n`;
-          message += `総勤務時間: ${data.statistics.total_work_time}\n`;
-          message += `総勤務日数: ${data.statistics.total_work_days}日\n\n`;
-        }
-        
-        // TOP5ユーザー
-        if (data.users_summary && data.users_summary.length > 0) {
-          message += '【勤務時間TOP5】\n';
-          data.users_summary.slice(0, 5).forEach((user: any, index: number) => {
-            const emoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-            message += `${emoji} ${user.name}: ${user.total_time_formatted} (${user.work_days}日)\n`;
-          });
-          message += '\n';
-        }
-        
-        // 月別サマリー（最新3ヶ月）
-        if (data.monthly_summary && data.monthly_summary.length > 0) {
-          message += '【月別勤務時間（最新3ヶ月）】\n';
-          data.monthly_summary.slice(0, 3).forEach((month: any) => {
-            message += `${month.month}: ${month.total_time_formatted} (${month.users_count}人)\n`;
-          });
-        }
-        
-        alert(message);
-      }
+      // データ取得成功（alertは削除）
     } catch (error) {
       console.error('APIエラー:', error);
       setError(error instanceof Error ? error.message : 'API呼び出しエラー');
-      alert(`APIエラー: ${error}`);
     } finally {
       setIsLoading(false);
     }

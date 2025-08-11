@@ -21,21 +21,6 @@ export function Header() {
         
         {/* 右側のボタン */}
         <div className="flex-1 flex justify-end gap-3">
-          <button
-            onClick={() => console.log("編集申請")}
-            className="relative group z-10"
-          >
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-500 to-gray-600 rounded-lg opacity-100 group-hover:opacity-100 blur-sm transition duration-300 group-hover:duration-200"></div>
-            <div className="relative z-10 flex items-center gap-2 px-5 py-2 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border border-gray-200 dark:border-transparent">
-              <span className="text-sm font-medium text-gray-900 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition duration-200">
-                編集申請
-              </span>
-              <svg className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </div>
-          </button>
-          
           <Link
             to={isOnHistoryPage ? "/" : "/page2"}
             className="relative group z-10"
