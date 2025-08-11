@@ -144,24 +144,24 @@ export function Dashboard() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(120,119,198,0.3),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_80%,rgba(100,100,120,0.3),transparent_50%)]"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(120,119,198,0.3),transparent_50%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(100,100,120,0.3),transparent_50%)]"></div>
         </div>
-      <div className="w-full px-2 py-2 relative z-10 h-[calc(100vh-64px)]">
+      <div className="w-full px-4 py-3 relative z-10 h-[calc(100vh-64px)]">
         <div className="flex flex-col gap-0 h-full">
           {/* 統合カード */}
           <Card className="w-full shadow-2xl border-0 bg-white/80 dark:bg-black/40 backdrop-blur-xl overflow-hidden flex flex-col h-full transition-all duration-500 ease-in-out">
             {/* 時計セクション */}
-            <div className="bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/30 dark:to-slate-600/30 backdrop-blur-sm p-1.5 border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
-              <div className="flex justify-center items-center">
-                <div className="flex gap-3 items-center justify-center">
-                  {/* 時計カード */}
+            <div className="bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/30 dark:to-slate-600/30 backdrop-blur-sm p-1.5 border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out flex-shrink-0">
+              <div className="grid grid-cols-12 gap-4 items-center px-3">
+                {/* 時計カード - 左側3列 */}
+                <div className="col-span-3">
                   <Card className="border-0 bg-white/90 dark:bg-black/50 backdrop-blur-xl shadow-xl transition-all duration-300 hover:shadow-2xl">
                     <CardContent className="p-3">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         {/* デジタル時計 */}
                         <div className="flex-1 text-center">
-                          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">
                             {formatDate(currentTime)}
                           </div>
-                          <div className="text-2xl font-bold tracking-wider bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mt-1">
+                          <div className="text-2xl font-bold tracking-wide bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mt-1">
                             {formatTime(currentTime)}
                           </div>
                         </div>
@@ -250,14 +250,56 @@ export function Dashboard() {
                     </CardContent>
                   </Card>
                 </div>
+                
+                {/* ユーザー凡例 - 中央から右側9列 */}
+                <div className="col-span-9">
+                  <Card className="border-0 bg-white/90 dark:bg-black/50 backdrop-blur-xl shadow-lg">
+                    <CardContent className="p-2.5">
+                      <div className="grid grid-cols-4 gap-x-4 gap-y-1">
+                        {topUsers.map((userName, index) => {
+                          const colors = [
+                            "#3B82F6", // 1. 青
+                            "#10B981", // 2. 緑
+                            "#F59E0B", // 3. オレンジ
+                            "#8B5CF6", // 4. 紫
+                            "#EF4444", // 5. 赤
+                            "#06B6D4", // 6. シアン
+                            "#8B5CF6", // 7. バイオレット
+                            "#EC4899", // 8. ピンク
+                            "#14B8A6", // 9. ティール
+                            "#F59E0B", // 10. アンバー
+                            "#84CC16", // 11. ライム
+                            "#6366F1", // 12. インディゴ
+                            "#F43F5E", // 13. ローズ
+                            "#0EA5E9", // 14. スカイ
+                            "#A855F7", // 15. パープル
+                          ]
+                          const color = colors[index % colors.length]
+                          
+                          return (
+                            <div key={userName} className="flex items-center gap-2">
+                              <div 
+                                className="w-4 h-4 rounded-full shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 flex-shrink-0"
+                                style={{ backgroundColor: color }}
+                              />
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                                {userName}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
             
             {/* グラフヘッダー */}
-            <CardHeader className="py-1.5 px-4 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
+            <CardHeader className="py-1 px-3 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
               <div className="grid grid-cols-3 items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-lg transition-colors duration-300">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-md transition-colors duration-300">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
@@ -287,7 +329,7 @@ export function Dashboard() {
                   {/* 自動更新トグル */}
                   <Button
                     onClick={() => setAutoRefresh(!autoRefresh)}
-                    className={`relative group h-10 px-3 overflow-hidden rounded-lg transition-all duration-300`}
+                    className={`relative group h-9 px-3 overflow-hidden rounded-md transition-all duration-300`}
                     variant="outline"
                   >
                     <div className={`absolute inset-0 transition-all duration-300 ${autoRefresh ? 'bg-gradient-to-r from-blue-400 to-blue-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}></div>
@@ -295,7 +337,7 @@ export function Dashboard() {
                       <svg className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      {autoRefresh ? '自動更新ON' : '自動更新OFF'}
+                      <span className="text-xs">{autoRefresh ? '自動更新ON' : '自動更新OFF'}</span>
                     </div>
                   </Button>
                   
@@ -303,30 +345,30 @@ export function Dashboard() {
                   <Button
                     onClick={handleRefresh}
                     disabled={isChartLoading}
-                    className="relative group h-10 px-3 overflow-hidden rounded-lg transition-all duration-300"
+                    className="relative group h-9 px-3 overflow-hidden rounded-md transition-all duration-300"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-700 transition-all duration-300 group-hover:from-purple-500 group-hover:to-purple-600"></div>
                     <div className="relative flex items-center gap-2 text-white font-semibold">
                       <svg className={`w-4 h-4 ${isChartLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      {isChartLoading ? '更新中...' : '更新'}
+                      <span className="text-xs">{isChartLoading ? '更新中...' : '更新'}</span>
                     </div>
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-3 flex-1 overflow-hidden">
+            <CardContent className="p-2 flex-1 overflow-hidden">
               <div className="w-full h-full">
                 <ChartContainer config={chartConfig} className="h-full" style={{ minWidth: '100%' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={chartData}
                       margin={{
-                        top: 10,
+                        top: 15,
                         right: 20,
-                        left: 35,
-                        bottom: 45,
+                        left: 45,
+                        bottom: 55,
                       }}
                     >
                       <defs>
@@ -369,8 +411,8 @@ export function Dashboard() {
                         tickLine={true}
                         axisLine={true}
                         tickMargin={4}
-                        domain={[0, 12]}
-                        ticks={[0, 2, 4, 6, 8, 10, 12]}
+                        domain={[0, 14]}
+                        ticks={[0, 2, 4, 6, 8, 10, 12, 14]}
                         tickFormatter={(value) => `${value}h`}
                         tick={{ fontSize: 9 }}
                       >
