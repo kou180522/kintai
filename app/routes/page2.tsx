@@ -254,7 +254,7 @@ export default function Page2() {
                         <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.3}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-400 dark:text-white/10" strokeOpacity={0.8} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-200 dark:text-white/10" strokeOpacity={0.5} />
                     <XAxis
                       dataKey="month"
                       stroke="#6b7280"
@@ -356,7 +356,7 @@ export default function Page2() {
                           type="monotone"
                           dataKey={userName}
                           stroke={config.color}
-                          strokeWidth={2}
+                          strokeWidth={3}
                           dot={{ 
                             r: 4, 
                             fill: config.color, 

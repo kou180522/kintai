@@ -34,6 +34,7 @@ export function Dashboard() {
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date())
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [isMonitoring, setIsMonitoring] = useState(true)
+  const [highlightedUser, setHighlightedUser] = useState<string | null>(null)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -255,6 +256,17 @@ export function Dashboard() {
                 <div className="col-span-9">
                   <Card className="border-0 bg-white/90 dark:bg-black/50 backdrop-blur-xl shadow-lg">
                     <CardContent className="p-2.5">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-400">ユーザー一覧（クリックで強調表示）</h3>
+                        {highlightedUser && (
+                          <button
+                            onClick={() => setHighlightedUser(null)}
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            リセット
+                          </button>
+                        )}
+                      </div>
                       <div className="grid grid-cols-4 gap-x-4 gap-y-1">
                         {topUsers.map((userName, index) => {
                           const colors = [
@@ -277,12 +289,22 @@ export function Dashboard() {
                           const color = colors[index % colors.length]
                           
                           return (
-                            <div key={userName} className="flex items-center gap-2">
+                            <div 
+                              key={userName} 
+                              className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-1 py-0.5 transition-colors"
+                              onClick={() => setHighlightedUser(highlightedUser === userName ? null : userName)}
+                            >
                               <div 
-                                className="w-4 h-4 rounded-full shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 flex-shrink-0"
+                                className={`w-4 h-4 rounded-full shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 flex-shrink-0 transition-all ${
+                                  highlightedUser === userName ? 'ring-2 ring-offset-1 ring-blue-500 scale-125' : ''
+                                }`}
                                 style={{ backgroundColor: color }}
                               />
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                              <span className={`text-sm font-medium truncate transition-all ${
+                                highlightedUser === userName 
+                                  ? 'text-blue-600 dark:text-blue-400 font-bold' 
+                                  : 'text-gray-700 dark:text-gray-300'
+                              }`}>
                                 {userName}
                               </span>
                             </div>
@@ -385,7 +407,7 @@ export function Dashboard() {
                       <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-400 dark:text-white/10" strokeOpacity={0.8} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-200 dark:text-white/10" strokeOpacity={0.5} />
                       <XAxis
                         dataKey="date"
                         stroke="#6b7280"
@@ -507,26 +529,34 @@ export function Dashboard() {
                         ]
                         const color = colors[index % colors.length]
                         
+                        const isHighlighted = highlightedUser === userName
+                        const isOtherHighlighted = highlightedUser && highlightedUser !== userName
+                        
                         return (
                           <Line
                             key={userName}
                             type="monotone"
                             dataKey={userName}
                             stroke={color}
-                            strokeWidth={1.5}
+                            strokeWidth={isHighlighted ? 4 : isOtherHighlighted ? 1 : 2.5}
+                            strokeOpacity={isOtherHighlighted ? 0.2 : 1}
                             dot={{ 
-                              r: 3, 
+                              r: isHighlighted ? 5 : 3, 
                               fill: color, 
                               strokeWidth: 1, 
-                              stroke: "white"
+                              stroke: "white",
+                              fillOpacity: isOtherHighlighted ? 0.2 : 1
                             }}
                             connectNulls={true}
                             activeDot={{ 
-                              r: 6, 
+                              r: isHighlighted ? 8 : 6, 
                               strokeWidth: 2, 
                               stroke: color, 
                               fill: "white"
                             }}
+                            className={`transition-all duration-300 ${
+                              isHighlighted ? 'drop-shadow-lg' : ''
+                            }`}
                           />
                         )
                       })}
