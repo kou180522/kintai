@@ -158,19 +158,19 @@ export default function Page2() {
       </div>
       <div className="w-full max-w-6xl mx-auto px-4 py-1 relative z-10 h-[calc(100vh-64px)]">
         <Card className="shadow-2xl border-0 bg-white/80 dark:bg-black/40 backdrop-blur-xl transition-all duration-500 ease-in-out h-full flex flex-col">
-          <CardHeader className="py-3 px-4 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
+          <CardHeader className="py-3 px-5 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-lg transition-colors duration-300">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-lg transition-colors duration-300">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                  <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
                     月別勤務時間推移
                   </CardTitle>
-                  <CardDescription className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+                  <CardDescription className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
                     {userMonthlyData.length > 0 
                       ? `${userMonthlyData[0]?.month} 〜 ${userMonthlyData[userMonthlyData.length - 1]?.month} (全${Object.keys(userConfigs).length}人のユーザー)`
                       : '過去12ヶ月の月別勤務時間'}
@@ -179,22 +179,22 @@ export default function Page2() {
               </div>
               <div className="flex items-center gap-2">
                 {/* 最終更新時刻 */}
-                <span className="text-xs text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                   最終更新: {lastUpdateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 
                 {/* 自動更新トグル */}
                 <Button
                   onClick={() => setAutoRefresh(!autoRefresh)}
-                  className="relative group h-10 px-3 overflow-hidden rounded-lg transition-all duration-300"
+                  className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
                   variant="outline"
                 >
                   <div className={`absolute inset-0 transition-all duration-300 ${autoRefresh ? 'bg-gradient-to-r from-blue-400 to-blue-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}></div>
                   <div className="relative flex items-center gap-2 text-white font-semibold">
-                    <svg className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-5 h-5 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    {autoRefresh ? '自動ON' : '自動OFF'}
+                    <span className="text-sm font-medium">{autoRefresh ? '自動更新ON' : '自動更新OFF'}</span>
                   </div>
                 </Button>
                 
@@ -209,10 +209,10 @@ export default function Page2() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-700 transition-all duration-300 group-hover:from-purple-500 group-hover:to-purple-600 dark:group-hover:from-purple-500 dark:group-hover:to-purple-600"></div>
                   <div className="relative flex items-center gap-2 text-white font-semibold">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                     </svg>
-                    {isLoading ? '処理中...' : 'データ更新'}
+                    <span className="text-sm font-medium">{isLoading ? '処理中...' : 'データ更新'}</span>
                   </div>
                 </Button>
               </div>

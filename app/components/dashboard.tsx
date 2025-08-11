@@ -296,24 +296,24 @@ export function Dashboard() {
             </div>
             
             {/* グラフヘッダー */}
-            <CardHeader className="py-1 px-3 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
+            <CardHeader className="py-3 px-5 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
               <div className="grid grid-cols-3 items-center">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-md transition-colors duration-300">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-lg transition-colors duration-300">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
                   <div>
-                    <CardTitle className="text-sm font-bold text-gray-900 dark:text-white">
+                    <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
                       勤務時間推移
                     </CardTitle>
-                    <CardDescription className="text-xs text-gray-600 dark:text-gray-300">
+                    <CardDescription className="text-sm text-gray-600 dark:text-gray-300">
                       {isChartLoading ? 'データ読み込み中...' : 
                        topUsers.length > 0 ? `全${topUsers.length}人のユーザーを表示中` : 
                        '日別の勤務時間を表示しています'}
                       {!isChartLoading && (
-                        <span className="ml-2 text-xs">
+                        <span className="ml-2 text-sm">
                           最終更新: {lastUpdateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
@@ -329,15 +329,15 @@ export function Dashboard() {
                   {/* 自動更新トグル */}
                   <Button
                     onClick={() => setAutoRefresh(!autoRefresh)}
-                    className={`relative group h-9 px-3 overflow-hidden rounded-md transition-all duration-300`}
+                    className={`relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300`}
                     variant="outline"
                   >
                     <div className={`absolute inset-0 transition-all duration-300 ${autoRefresh ? 'bg-gradient-to-r from-blue-400 to-blue-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}></div>
                     <div className="relative flex items-center gap-2 text-white font-semibold">
-                      <svg className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-5 h-5 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <span className="text-xs">{autoRefresh ? '自動更新ON' : '自動更新OFF'}</span>
+                      <span className="text-sm font-medium">{autoRefresh ? '自動更新ON' : '自動更新OFF'}</span>
                     </div>
                   </Button>
                   
@@ -345,14 +345,14 @@ export function Dashboard() {
                   <Button
                     onClick={handleRefresh}
                     disabled={isChartLoading}
-                    className="relative group h-9 px-3 overflow-hidden rounded-md transition-all duration-300"
+                    className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-700 transition-all duration-300 group-hover:from-purple-500 group-hover:to-purple-600"></div>
                     <div className="relative flex items-center gap-2 text-white font-semibold">
-                      <svg className={`w-4 h-4 ${isChartLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-5 h-5 ${isChartLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <span className="text-xs">{isChartLoading ? '更新中...' : '更新'}</span>
+                      <span className="text-sm font-medium">{isChartLoading ? '更新中...' : '更新'}</span>
                     </div>
                   </Button>
                 </div>
