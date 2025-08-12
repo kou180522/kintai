@@ -6,3 +6,6 @@
 /build/
 
 /generated/prisma
+
+# Logs
+/backend/logs/

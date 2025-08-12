@@ -57,6 +57,7 @@ export default function Page2() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [highlightedUser, setHighlightedUser] = useState<string | null>(null);
 
   // ページ読み込み時にデータを取得
   useEffect(() => {
@@ -350,26 +351,33 @@ export default function Page2() {
                       const config = userConfigs[userName];
                       if (!config) return null;
                       
+                      const isHighlighted = highlightedUser === userName;
+                      const isOtherHighlighted = highlightedUser && highlightedUser !== userName;
+                      
                       return (
                         <Line
                           key={userName}
                           type="monotone"
                           dataKey={userName}
                           stroke={config.color}
-                          strokeWidth={3}
+                          strokeWidth={isHighlighted ? 6 : isOtherHighlighted ? 1.5 : 3}
+                          strokeOpacity={isOtherHighlighted ? 0.3 : 1}
                           dot={{ 
-                            r: 4, 
+                            r: isHighlighted ? 5 : isOtherHighlighted ? 2 : 4, 
                             fill: config.color, 
-                            strokeWidth: 1, 
+                            fillOpacity: isOtherHighlighted ? 0.3 : 1,
+                            strokeWidth: isHighlighted ? 2 : 1, 
                             stroke: "white"
                           }}
                           activeDot={{ 
-                            r: 6, 
+                            r: isHighlighted ? 8 : 6, 
                             strokeWidth: 2, 
                             stroke: config.color, 
                             fill: "white"
                           }}
                           connectNulls={false}
+                          onClick={() => setHighlightedUser(highlightedUser === userName ? null : userName)}
+                          style={{ cursor: 'pointer' }}
                         />
                       );
                     })}
@@ -382,20 +390,43 @@ export default function Page2() {
             {/* ユーザー凡例 */}
             {Object.keys(userConfigs).length > 0 && (
               <div className="mt-4 flex flex-wrap gap-3 justify-center">
-                {Object.entries(userConfigs).map(([userName, config]: [string, any]) => (
-                  <div key={userName} className="flex items-center gap-2">
+                {Object.entries(userConfigs).map(([userName, config]: [string, any]) => {
+                  const isHighlighted = highlightedUser === userName;
+                  const isOtherHighlighted = highlightedUser && highlightedUser !== userName;
+                  
+                  return (
                     <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: config.color }}
-                    />
-                    <span className="text-xs text-gray-700 dark:text-gray-300">
-                      {userName}
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      ({config.total})
-                    </span>
-                  </div>
-                ))}
+                      key={userName} 
+                      className={`flex items-center gap-2 cursor-pointer transition-all duration-200 px-2 py-1 rounded-md ${
+                        isHighlighted ? 'bg-gray-100 dark:bg-gray-800 scale-110' : 
+                        isOtherHighlighted ? 'opacity-40' : 'hover:bg-gray-50 dark:hover:bg-gray-900'
+                      }`}
+                      onClick={() => setHighlightedUser(highlightedUser === userName ? null : userName)}
+                    >
+                      <div 
+                        className={`rounded-full transition-all duration-200 ${
+                          isHighlighted ? 'w-4 h-4' : 'w-3 h-3'
+                        }`}
+                        style={{ 
+                          backgroundColor: config.color,
+                          opacity: isOtherHighlighted ? 0.3 : 1
+                        }}
+                      />
+                      <span className={`text-xs transition-all duration-200 ${
+                        isHighlighted ? 'font-bold text-gray-900 dark:text-white' : 
+                        'text-gray-700 dark:text-gray-300'
+                      }`}>
+                        {userName}
+                      </span>
+                      <span className={`text-xs transition-all duration-200 ${
+                        isHighlighted ? 'font-semibold text-gray-700 dark:text-gray-200' :
+                        'text-gray-500 dark:text-gray-400'
+                      }`}>
+                        ({config.total})
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
             
