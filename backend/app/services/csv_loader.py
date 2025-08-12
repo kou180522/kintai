@@ -274,8 +274,8 @@ class CSVLoader:
                 if ts["status"] == "start":
                     # 既に開始時刻がある場合（連続するstart）
                     if current_start:
-                        # 前の開始から現在までを1セッションとして扱う（自動終了）
-                        print(f"警告: {user_name} - 連続する開始時刻を検出、前のセッションを自動終了")
+                        # 連続するstartの場合、最初のstartを無視して2番目を採用
+                        print(f"警告: {user_name} - 連続する開始時刻を検出、最初の開始時刻を無視: {current_start['date']} {current_start['time']} → {ts['date']} {ts['time']}")
                     current_start = ts
                     i += 1
                     
