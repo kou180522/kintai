@@ -162,8 +162,8 @@ export default function Page2() {
           <CardHeader className="py-3 px-5 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-slate-600 dark:to-slate-700 rounded-lg transition-colors duration-300">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="p-2 bg-gray-800 dark:bg-white rounded-lg transition-colors duration-300">
+                  <svg className="w-5 h-5 text-white dark:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -185,37 +185,64 @@ export default function Page2() {
                 </span>
                 
                 {/* 自動更新トグル */}
-                <Button
+                <button
                   onClick={() => setAutoRefresh(!autoRefresh)}
-                  className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
-                  variant="outline"
+                  className="relative group z-10"
                 >
-                  <div className={`absolute inset-0 transition-all duration-300 ${autoRefresh ? 'bg-gradient-to-r from-blue-400 to-blue-500' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}></div>
-                  <div className="relative flex items-center gap-2 text-white font-semibold">
-                    <svg className={`w-5 h-5 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span className="text-sm font-medium">{autoRefresh ? '自動更新ON' : '自動更新OFF'}</span>
+                  <div className={`absolute -inset-0.5 rounded-lg blur-[1px] transition-all duration-300 group-hover:blur-[2px] ${
+                    autoRefresh 
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-green-400 dark:to-emerald-400' 
+                      : 'bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 opacity-60'
+                  }`}></div>
+                  <div className="relative z-10 flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border-0">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition duration-200">
+                      {autoRefresh ? '自動更新' : '手動'}
+                    </span>
+                    <div className={`w-5 h-5 rounded-full transition-all duration-300 ${
+                      autoRefresh 
+                        ? 'bg-emerald-500 animate-pulse' 
+                        : 'bg-gray-400'
+                    }`} />
                   </div>
-                </Button>
+                </button>
                 
                 {/* 手動更新ボタン */}
-                <Button
+                <button
                   onClick={() => {
                     handleApiCall();
                     fetchUserMonthlyData();
                   }}
                   disabled={isLoading}
-                  className="relative group h-10 px-4 overflow-hidden rounded-lg transition-all duration-300"
+                  className="relative group z-10"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-700 transition-all duration-300 group-hover:from-purple-500 group-hover:to-purple-600 dark:group-hover:from-purple-500 dark:group-hover:to-purple-600"></div>
-                  <div className="relative flex items-center gap-2 text-white font-semibold">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                  <div className={`absolute -inset-0.5 rounded-lg blur-[1px] transition-all duration-300 group-hover:blur-[2px] ${
+                    isLoading 
+                      ? 'bg-gradient-to-r from-blue-400 to-indigo-400 dark:from-sky-300 dark:to-sky-400 animate-pulse' 
+                      : 'bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-sky-400 dark:to-cyan-400'
+                  }`}></div>
+                  <div className="relative z-10 flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border-0">
+                    <span className={`text-sm font-medium transition duration-200 ${
+                      isLoading 
+                        ? 'text-blue-600 dark:text-sky-400' 
+                        : 'text-blue-600 dark:text-sky-400 group-hover:text-indigo-600 dark:group-hover:text-cyan-400'
+                    }`}>
+                      {isLoading ? '更新中' : '更新'}
+                    </span>
+                    <svg 
+                      className={`w-5 h-5 transition-all duration-300 ${
+                        isLoading 
+                          ? 'animate-spin text-blue-600 dark:text-sky-400' 
+                          : 'text-blue-600 dark:text-sky-400 group-hover:text-indigo-600 dark:group-hover:text-cyan-400 group-hover:rotate-180'
+                      }`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth={2}
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    <span className="text-sm font-medium">{isLoading ? '処理中...' : 'データ更新'}</span>
                   </div>
-                </Button>
+                </button>
               </div>
             </div>
           </CardHeader>

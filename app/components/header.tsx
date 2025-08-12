@@ -14,9 +14,15 @@ export function Header() {
         </div>
         
         {/* 中央のロゴ */}
-        <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-lg"></div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">勤怠Pro</span>
+        <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-3 group">
+          <div className="w-8 h-8 bg-black dark:bg-white rounded-lg shadow-sm group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
+            <div className="w-full h-full rounded-lg flex items-center justify-center">
+              <span className="text-white dark:text-black font-black text-lg">P</span>
+            </div>
+          </div>
+          <span className="text-2xl font-black text-black dark:text-white tracking-tight group-hover:tracking-normal transition-all duration-300">
+            勤怠<span className="text-gray-500 dark:text-gray-400 font-medium">Pro</span>
+          </span>
         </Link>
         
         {/* 右側のボタン */}
@@ -26,8 +32,8 @@ export function Header() {
             className="relative group z-10"
             onClick={() => console.log(isOnHistoryPage ? "ホームへ戻る" : "履歴ページへ")}
           >
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg opacity-100 group-hover:opacity-100 blur-sm transition duration-300 group-hover:duration-200"></div>
-            <div className="relative z-10 flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border border-gray-200 dark:border-transparent">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-gray-300 rounded-lg opacity-100 blur-[1px] transition-all duration-300 group-hover:blur-[2px]"></div>
+            <div className="relative z-10 flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border-0">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition duration-200">
                 {isOnHistoryPage ? "ホーム" : "履歴"}
               </span>
