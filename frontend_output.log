@@ -1,0 +1,17 @@
+$ react-router dev
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+15:13:51 [vite] (client) ✨ new dependencies optimized: next-themes, @radix-ui/react-slot, class-variance-authority, clsx, tailwind-merge, recharts
+15:13:51 [vite] (client) ✨ optimized dependencies changed. reloading
+15:16:11 [vite] (client) page reload /Users/Owner/Atlas/kintai/app/routes/page2.tsx
+15:16:11 [vite] (client) page reload /Users/Owner/Atlas/kintai/app/routes/page2.tsx
+15:16:11 [vite] (client) page reload app/routes/page2.tsx
+15:16:11 [vite] (ssr) page reload app/routes/page2.tsx
+15:16:29 [vite] (client) page reload /Users/Owner/Atlas/kintai/app/routes/page2.tsx
+15:16:29 [vite] (client) page reload /Users/Owner/Atlas/kintai/app/routes/page2.tsx
+15:16:29 [vite] (client) page reload app/routes/page2.tsx
+15:16:29 [vite] (ssr) page reload app/routes/page2.tsx
+15:16:46 [vite] (client) page reload /Users/Owner/Atlas/kintai/app/routes/page2.tsx
+15:16:46 [vite] (client) page reload /Users/Owner/Atlas/kintai/app/routes/page2.tsx
+15:16:46 [vite] (client) page reload app/routes/page2.tsx
+15:16:46 [vite] (ssr) page reload app/routes/page2.tsx
