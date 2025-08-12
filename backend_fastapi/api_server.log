@@ -26353,3 +26353,98 @@ INFO:     127.0.0.1:51487 - "GET /subpage/daily-chart?days=31&top_users=15 HTTP/
 WARNING:  WatchFiles detected changes in 'app/routers/today.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for background tasks to complete. (CTRL+C to force quit)
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[06:54:22] Google Sheetsのデータが更新されました
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[13:31:30] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[16:10:11] Google Sheetsのデータが更新されました
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[16:45:29] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: 
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[18:02:59] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[19:48:33] Google Sheetsのデータが更新されました
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[20:06:06] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[20:49:33] Google Sheetsのデータが更新されました
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [Connection reset by peer]
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[21:41:06] Google Sheetsのデータが更新されました
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[21:50:29] Google Sheetsのデータが更新されました
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [None]
+更新チェックエラー: 
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[00:32:48] Google Sheetsのデータが更新されました
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[01:53:21] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[02:54:25] Google Sheetsのデータが更新されました
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[03:09:35] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: 
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[05:12:22] Google Sheetsのデータが更新されました
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[06:47:17] Google Sheetsのデータが更新されました
+更新チェックエラー: Cannot connect to host doc-0g-60-sheets.googleusercontent.com:443 ssl:default [None]
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[08:30:20] Google Sheetsのデータが更新されました
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: 
+更新チェックエラー: 
+更新チェックエラー: Connection timeout to host https://docs.google.com/spreadsheets/d/1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4/export?format=csv
+更新チェックエラー: 
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[10:32:12] Google Sheetsのデータが更新されました
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[11:02:31] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[11:40:36] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+CSVデータ読み込み完了: 15人のユーザー、2349件の勤怠データ
+[11:52:52] Google Sheetsのデータが更新されました
+更新チェックエラー: 
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]
+更新チェックエラー: Cannot connect to host docs.google.com:443 ssl:default [nodename nor servname provided, or not known]

@@ -35,6 +35,9 @@ export function Dashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [isMonitoring, setIsMonitoring] = useState(true)
   const [highlightedUser, setHighlightedUser] = useState<string | null>(null)
+  const [userMonthlyTotal, setUserMonthlyTotal] = useState<{[key: string]: {hours: number, minutes: number}}>({})
+  const [showPopup, setShowPopup] = useState(false)
+  const [popupUser, setPopupUser] = useState<string | null>(null)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -75,6 +78,30 @@ export function Dashboard() {
           // トップユーザーのリストを取得
           setTopUsers(Object.keys(data.user_configs))
           setLastUpdateTime(new Date())
+          
+          // 各ユーザーの今月の合計時間を計算（今日までの分）
+          const today = new Date()
+          const currentMonth = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}`
+          const monthlyTotals: {[key: string]: {hours: number, minutes: number}} = {}
+          
+          Object.keys(data.user_configs).forEach(userName => {
+            let totalHours = 0
+            data.chart_data.forEach((day: any) => {
+              // 今月のデータのみを集計
+              const dayDate = day.date
+              if (dayDate && day[userName] !== null && day[userName] !== undefined) {
+                // 現在の月のデータか確認（MM/DD形式から判断）
+                const currentMonthStr = String(today.getMonth() + 1).padStart(2, '0')
+                if (dayDate.startsWith(currentMonthStr + '/')) {
+                  totalHours += day[userName]
+                }
+              }
+            })
+            const hours = Math.floor(totalHours)
+            const minutes = Math.round((totalHours - hours) * 60)
+            monthlyTotals[userName] = { hours, minutes }
+          })
+          setUserMonthlyTotal(monthlyTotals)
         }
       }
     } catch (error) {
@@ -257,7 +284,9 @@ export function Dashboard() {
                   <Card className="border-0 bg-white/90 dark:bg-black/50 backdrop-blur-xl shadow-lg">
                     <CardContent className="p-2.5">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-400">ユーザー一覧（クリックで強調表示）</h3>
+                        <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                          ユーザー一覧（クリックで詳細表示）
+                        </h3>
                         {highlightedUser && (
                           <button
                             onClick={() => setHighlightedUser(null)}
@@ -292,7 +321,12 @@ export function Dashboard() {
                             <div 
                               key={userName} 
                               className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-1 py-0.5 transition-colors"
-                              onClick={() => setHighlightedUser(highlightedUser === userName ? null : userName)}
+                              onClick={() => {
+                                setHighlightedUser(highlightedUser === userName ? null : userName)
+                                setPopupUser(userName)
+                                setShowPopup(true)
+                                setTimeout(() => setShowPopup(false), 3000) // 3秒後に自動で閉じる
+                              }}
                             >
                               <div 
                                 className={`w-4 h-4 rounded-full shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 flex-shrink-0 transition-all ${
@@ -316,6 +350,62 @@ export function Dashboard() {
                 </div>
               </div>
             </div>
+            
+            {/* ポップアップ */}
+            {showPopup && popupUser && userMonthlyTotal[popupUser] && (() => {
+              const userIndex = topUsers.indexOf(popupUser)
+              const colors = [
+                "#3B82F6", // 1. 青
+                "#10B981", // 2. 緑
+                "#F59E0B", // 3. オレンジ
+                "#8B5CF6", // 4. 紫
+                "#EF4444", // 5. 赤
+                "#06B6D4", // 6. シアン
+                "#8B5CF6", // 7. バイオレット
+                "#EC4899", // 8. ピンク
+                "#14B8A6", // 9. ティール
+                "#F59E0B", // 10. アンバー
+                "#84CC16", // 11. ライム
+                "#6366F1", // 12. インディゴ
+                "#F43F5E", // 13. ローズ
+                "#0EA5E9", // 14. スカイ
+                "#A855F7", // 15. パープル
+              ]
+              const userColor = colors[userIndex % colors.length]
+              
+              return (
+                <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                  <div 
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 border-3 pointer-events-auto transform transition-all duration-300 scale-100 animate-pulse"
+                    style={{ borderColor: userColor, borderWidth: '3px' }}
+                  >
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        {popupUser}
+                      </div>
+                      <div 
+                        className="text-3xl font-bold"
+                        style={{ color: userColor }}
+                      >
+                        {userMonthlyTotal[popupUser].hours}時間{userMonthlyTotal[popupUser].minutes}分
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                        今月の累計勤務時間
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowPopup(false)}
+                      className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-lg pointer-events-auto"
+                      style={{ backgroundColor: userColor }}
+                    >
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
             
             {/* グラフヘッダー */}
             <CardHeader className="py-3 px-5 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-colors duration-300">
@@ -435,10 +525,10 @@ export function Dashboard() {
                         tickMargin={4}
                         domain={[0, 14]}
                         ticks={[0, 2, 4, 6, 8, 10, 12, 14]}
-                        tickFormatter={(value) => `${value}h`}
+                        tickFormatter={(value) => `${value}`}
                         tick={{ fontSize: 9 }}
                       >
-                        <Label value="勤務時間" angle={-90} position="insideLeft" style={{ fontSize: 12, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
+                        <Label value="Hours" angle={-90} position="insideLeft" style={{ fontSize: 12, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
                       </YAxis>
                       <ChartTooltip
                         cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}

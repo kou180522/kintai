@@ -275,10 +275,10 @@ export default function Page2() {
                       axisLine={true}
                       tickMargin={8}
                       domain={[0, 'auto']}
-                      tickFormatter={(value) => `${Math.round(value)}h`}
+                      tickFormatter={(value) => `${Math.round(value)}`}
                       tick={{ fontSize: 11 }}
                     >
-                      <Label value="月別勤務時間" angle={-90} position="insideLeft" style={{ fontSize: 13, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
+                      <Label value="Hours" angle={-90} position="insideLeft" style={{ fontSize: 13, fontWeight: 600 }} fill="#4b5563" className="dark:fill-gray-300" />
                     </YAxis>
                     <ChartTooltip
                       cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
