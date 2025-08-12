@@ -10,8 +10,10 @@ from collections import defaultdict
 
 class CSVLoader:
     def __init__(self):
-        # backend/app/services から3階層上がプロジェクトルート、そしてdataフォルダ
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        # backend/app/services から2階層上がってbackendディレクトリ
+        backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        # 1階層上がってプロジェクトルート、そしてdataフォルダ
+        project_root = os.path.dirname(backend_dir)
         self.csv_file_path = os.path.join(project_root, "data", "attendance_data.csv")
         self.users = []
         self.attendance_records = []
