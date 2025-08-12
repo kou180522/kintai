@@ -120,12 +120,31 @@ class CSVLoader:
         status_lower = status.lower()
         adjustment_minutes = 0
         
-        # messageフィールドにs+XXまたはf+XXパターンがある場合を優先
+        # messageフィールドをチェック
         if message:
             message_lower = message.lower()
-            if '+' in message_lower or '-' in message_lower:
-                # s+60, f+30, f-20 などのパターンを探す
-                import re
+            import re
+            
+            # s18:00 や f19:30 のような時刻指定形式を最初にチェック
+            time_match = re.search(r'([sf])(\d{1,2}):(\d{2})', message_lower)
+            if time_match:
+                status_type = time_match.group(1)
+                specified_hour = int(time_match.group(2))
+                specified_minute = int(time_match.group(3))
+                
+                # 基本ステータスを設定
+                if status_type == 's':
+                    base_status = 'start'
+                else:
+                    base_status = 'end'
+                
+                # 指定時刻を直接返す
+                adjusted_time = f"{specified_hour:02d}:{specified_minute:02d}"
+                print(f"時刻指定検出: {message} → {adjusted_time}")
+                return base_status, adjusted_time, 0
+            
+            # s+60, f+30, f-20 などのパターンをチェック
+            elif '+' in message_lower or '-' in message_lower:
                 match = re.search(r'([sf])([\+\-])(\d+)', message_lower)
                 if match:
                     sign = match.group(2)
