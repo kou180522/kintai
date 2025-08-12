@@ -4,6 +4,7 @@ import { ThemeToggle } from "./theme-toggle";
 export function Header() {
   const location = useLocation();
   const isOnHistoryPage = location.pathname === "/page2";
+  const isOnGuidelinePage = location.pathname === "/guidelines";
   
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-all duration-500 ease-in-out relative z-50">
@@ -27,6 +28,28 @@ export function Header() {
         
         {/* 右側のボタン */}
         <div className="flex-1 flex justify-end gap-3">
+          {/* ガイドラインボタン */}
+          <Link
+            to="/guidelines"
+            className="relative group z-10"
+          >
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-500 dark:from-amber-400 dark:to-orange-400 rounded-lg opacity-100 blur-[1px] transition-all duration-300 group-hover:blur-[2px]"></div>
+            <div className="relative z-10 flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border-0">
+              <span className="text-sm font-medium text-amber-600 dark:text-amber-400 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition duration-200">
+                ガイド
+              </span>
+              <svg 
+                className="w-5 h-5 text-amber-600 dark:text-amber-400 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-all duration-300" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+          </Link>
+          
+          {/* 履歴ボタン */}
           <Link
             to={isOnHistoryPage ? "/" : "/page2"}
             className="relative group z-10"
