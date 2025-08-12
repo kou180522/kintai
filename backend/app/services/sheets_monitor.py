@@ -12,7 +12,10 @@ class GoogleSheetsMonitor:
     def __init__(self):
         self.sheet_id = "1YxafvPVXQ2D3YAJqHTE_2tMhDgo_ZJrhE9nX_aZv2c4"
         self.csv_url = f"https://docs.google.com/spreadsheets/d/{self.sheet_id}/export?format=csv"
-        self.csv_path = "attendance_data.csv"
+        # backendから見たプロジェクトルートのdataフォルダ
+        backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        project_root = os.path.dirname(backend_dir)
+        self.csv_path = os.path.join(project_root, "data", "attendance_data.csv")
         self.check_interval = 30  # 30秒ごとにチェック
         self.last_hash = None
         self.is_monitoring = False

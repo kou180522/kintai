@@ -6,6 +6,30 @@ from app.services.csv_loader import csv_loader
 
 router = APIRouter()
 
+@router.post("/reload-data")
+async def reload_csv_data():
+    """
+    CSVデータを再読み込み
+    """
+    try:
+        success = csv_loader.reload_data()
+        if success:
+            return {
+                "success": True,
+                "message": "データを再読み込みしました",
+                "timestamp": datetime.now().isoformat()
+            }
+        else:
+            return {
+                "success": False,
+                "message": "データの再読み込みに失敗しました"
+            }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"データ再読み込み中にエラーが発生しました: {str(e)}"
+        )
+
 class UserSummary(BaseModel):
     employee_id: str
     name: str
