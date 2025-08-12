@@ -263,10 +263,24 @@ async def get_daily_chart_data(
         
         user_time_data = csv_loader.get_user_time_data()
         
-        # 勤務時間が多い順にユーザーを取得（全15人）
+        # 直近7日間の勤務時間を計算してソート
+        recent_days = 7
+        recent_date = datetime.now() - timedelta(days=recent_days)
+        recent_date_str = recent_date.strftime("%Y/%m/%d")
+        
+        user_recent_hours = {}
+        for user_name, user_data in user_time_data.items():
+            recent_minutes = 0
+            for date_str, day_data in user_data.get("daily_hours", {}).items():
+                # 直近7日間のデータのみ集計
+                if date_str >= recent_date_str:
+                    recent_minutes += day_data.get("work_minutes", 0)
+            user_recent_hours[user_name] = recent_minutes
+        
+        # 直近の勤務時間が多い順にユーザーを取得（全15人）
         sorted_users = sorted(
             user_time_data.items(),
-            key=lambda x: x[1]["total_hours"] * 60 + x[1]["total_minutes"],
+            key=lambda x: user_recent_hours.get(x[0], 0),
             reverse=True
         )[:top_users]
         
