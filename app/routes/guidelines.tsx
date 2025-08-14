@@ -25,7 +25,7 @@ export default function Guidelines() {
                 </svg>
               </div>
               <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-                勤怠管理システム ガイドライン
+                打刻方法ガイド
               </CardTitle>
             </div>
           </CardHeader>
