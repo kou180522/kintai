@@ -294,16 +294,12 @@ async def get_daily_chart_data(
             date_str = current_date.strftime("%Y/%m/%d")
             # 月と日だけ表示用（01/15のような形式）
             display_date = current_date.strftime("%m/%d")
-            date_list.append(display_date)
+            date_list.append((display_date, date_str))  # タプルで両方保持
             current_date += timedelta(days=1)
         
         # グラフデータを作成
         chart_data = []
-        for display_date in date_list:
-            # YYYY/MM/DD形式に変換（2025年と仮定）
-            month, day = display_date.split("/")
-            full_date = f"2025/{month}/{day}"
-            
+        for display_date, full_date in date_list:
             data_point = {"date": display_date}
             
             # 各ユーザーの勤務時間を追加
