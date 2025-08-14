@@ -185,24 +185,6 @@ export default function Guidelines() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                  <p className="font-medium mb-3">ケース3：終了なしで開始（f がない場合）</p>
-                  <div className="ml-4 space-y-2">
-                    <p className="text-sm">終了記録を忘れた場合：</p>
-                    <div className="bg-white dark:bg-gray-900 p-3 rounded mt-2">
-                      <p className="text-xs font-mono">
-                        09:00 s<br/>
-                        （終了記録なし）
-                      </p>
-                      <p className="text-sm mt-2 text-orange-600 dark:text-orange-400">
-                        → この日の勤務時間は計算されません（未完了セッション）
-                      </p>
-                    </div>
-                    <p className="text-sm mt-2">
-                      <span className="font-semibold">対処法：</span> 管理者に連絡して手動で終了時刻を追加してもらう
-                    </p>
-                  </div>
-                </div>
                 <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border-l-4 border-red-500">
                   <p className="font-medium mb-2">注意事項：</p>
                   <ul className="text-sm space-y-1 ml-4">
