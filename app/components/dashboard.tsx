@@ -181,7 +181,7 @@ export function Dashboard() {
               <div className="grid grid-cols-12 gap-4 items-center px-3">
                 {/* 時計カード - 左側3列 */}
                 <div className="col-span-3">
-                  <Card className="border-0 bg-white/90 dark:bg-black/50 backdrop-blur-xl shadow-xl transition-all duration-300 hover:shadow-2xl">
+                  <Card className="border-0 bg-white/90 dark:bg-black/50 backdrop-blur-xl shadow-xl transition-all duration-500 hover:shadow-2xl">
                     <CardContent className="p-3">
                       <div className="flex items-center gap-3">
                         {/* デジタル時計 */}

@@ -7,7 +7,7 @@ export function Header() {
   const isOnGuidelinePage = location.pathname === "/guidelines";
   
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-all duration-500 ease-in-out relative z-50">
+    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-colors duration-700 ease-in-out relative z-50">
       <div className="h-16 flex items-center justify-between px-6 relative">
         {/* 左側のテーマ切り替えボタン */}
         <div className="flex-1">

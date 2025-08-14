@@ -11,7 +11,7 @@
 html,
 body {
   @apply bg-white dark:bg-gray-950;
-
+  
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
@@ -21,6 +21,18 @@ body {
   0% { opacity: 0; transform: scale(0.95); }
   50% { opacity: 1; transform: scale(1.02); }
   100% { opacity: 0; transform: scale(1); }
+}
+
+@keyframes smoothFade {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes ultraSmoothFade {
+  0% { opacity: 0; }
+  40% { opacity: 0.8; }
+  100% { opacity: 0; }
 }
 
 @keyframes rotateIn {
