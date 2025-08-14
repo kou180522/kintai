@@ -32,8 +32,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
       </head>
       <body className="bg-white dark:bg-gray-900 transition-colors duration-500 ease-in-out">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
@@ -49,7 +47,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <Meta />
+      <Links />
+      <Outlet />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
