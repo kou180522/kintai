@@ -250,7 +250,7 @@ export default function Guidelines() {
                 <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border-l-4 border-red-500">
                   <p className="font-medium mb-2">システムの制限事項：</p>
                   <ul className="space-y-2 text-sm">
-                    <li>• <span className="font-semibold">24時間超の勤務</span>：連続24時間を超える勤務は異常値として検出され、警告が表示されます</li>
+                    <li>• <span className="font-semibold">12時間超の勤務</span>：連続12時間を超える勤務は異常値として検出され、警告が表示されます</li>
                     <li>• <span className="font-semibold">未完了セッション</span>：終了時刻（f）がない記録は勤務時間に含まれません</li>
                     <li>• <span className="font-semibold">開始なしの終了</span>：開始時刻（s）なしで終了（f）を記録した場合、その終了記録は無視されます</li>
                   </ul>
