@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from app.routers import subpage, monitor
+from app.routers import subpage, monitor, users, sheets_sync
 from app.services.csv_loader import csv_loader
 
 # .envファイルから環境変数を読み込み
@@ -46,3 +46,5 @@ async def health_check():
 
 app.include_router(subpage.router, prefix="/api/subpage", tags=["subpage"])
 app.include_router(monitor.router, prefix="/api/monitor", tags=["monitor"])
+app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(sheets_sync.router, prefix="/api/sheets", tags=["sheets_sync"])
