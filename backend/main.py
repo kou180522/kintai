@@ -44,5 +44,5 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
-app.include_router(subpage.router, prefix="/subpage", tags=["subpage"])
-app.include_router(monitor.router, prefix="/monitor", tags=["monitor"])
+app.include_router(subpage.router, prefix="/api/subpage", tags=["subpage"])
+app.include_router(monitor.router, prefix="/api/monitor", tags=["monitor"])

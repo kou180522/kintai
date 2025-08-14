@@ -83,7 +83,7 @@ export default function Page2() {
     setError(null);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
-      const response = await fetch(`${apiUrl}/subpage/update?limit=15&months=12`, {
+      const response = await fetch(`${apiUrl}/api/subpage/update?limit=15&months=12`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ export default function Page2() {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
       console.log('Fetching user monthly data from:', `${apiUrl}/subpage/monthly-by-user?top_users=15&months=12`);
       
-      const response = await fetch(`${apiUrl}/subpage/monthly-by-user?top_users=15&months=12`);
+      const response = await fetch(`${apiUrl}/api/subpage/monthly-by-user?top_users=15&months=12`);
       
       if (response.ok) {
         const data = await response.json();
