@@ -68,7 +68,7 @@ export function Dashboard() {
     setIsChartLoading(true)
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001'
-      const response = await fetch(`${apiUrl}/subpage/daily-chart?days=31&top_users=15`)
+      const response = await fetch(`${apiUrl}/api/subpage/daily-chart?days=31&top_users=15`)
       
       if (response.ok) {
         const data = await response.json()
