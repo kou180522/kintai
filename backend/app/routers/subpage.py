@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from app.services.csv_loader import csv_loader
+from app.services.user_colors import get_all_user_colors
 
 router = APIRouter()
 
@@ -269,15 +270,39 @@ async def get_daily_chart_data(
         csv_loader.reload_data()
         user_time_data = csv_loader.get_user_time_data()
         
-        # 総勤務時間でソート（月別グラフと同じ順序にするため）
+        # 現在の日時を取得
+        now = datetime.now()
+        
+        # 今月の勤務時間を計算
+        current_month = now.strftime("%Y/%m")
+        user_monthly_work_minutes = {}
+        user_monthly_work_hours_display = {}  # 表示用
+        
+        for user_name, user_data in user_time_data.items():
+            # 今月の総勤務時間を計算
+            total_minutes_this_month = 0
+            for date_str, day_data in user_data.get("daily_hours", {}).items():
+                if date_str.startswith(current_month):
+                    total_minutes_this_month += day_data.get("work_minutes", 0)
+            
+            user_monthly_work_minutes[user_name] = total_minutes_this_month
+            # 表示用に時間と分に変換
+            hours = total_minutes_this_month // 60
+            minutes = total_minutes_this_month % 60
+            user_monthly_work_hours_display[user_name] = f"{hours}h{minutes}m" if minutes > 0 else f"{hours}h"
+        
+        # 今月の勤務時間でソート（勤務時間が長い順）
         sorted_users = sorted(
             user_time_data.items(),
-            key=lambda x: x[1]["total_hours"] * 60 + x[1]["total_minutes"],
+            key=lambda x: user_monthly_work_minutes.get(x[0], 0),
             reverse=True
         )[:top_users]
         
+        # すべてのユーザー名を取得して色を割り当て
+        all_user_names = list(user_time_data.keys())
+        user_color_map = get_all_user_colors(all_user_names)
+        
         # 日付リストを作成（今月の1日から今日まで、またはmonth_offsetで指定された月）
-        now = datetime.now()
         
         # month_offsetで指定された月を計算
         if month_offset > 0:
@@ -340,29 +365,13 @@ async def get_daily_chart_data(
         
         # ユーザー情報（名前と色）
         user_configs = {}
-        # 統一されたカラーパレット（15人分）
-        colors = [
-            "#3B82F6",  # 1. Blue - 青
-            "#10B981",  # 2. Green - 緑
-            "#F59E0B",  # 3. Orange - オレンジ
-            "#8B5CF6",  # 4. Purple - 紫
-            "#EF4444",  # 5. Red - 赤
-            "#06B6D4",  # 6. Cyan - シアン
-            "#EC4899",  # 7. Pink - ピンク
-            "#14B8A6",  # 8. Teal - ティール
-            "#F97316",  # 9. Dark Orange - ダークオレンジ
-            "#84CC16",  # 10. Lime - ライム
-            "#6366F1",  # 11. Indigo - インディゴ
-            "#F43F5E",  # 12. Rose - ローズ
-            "#0EA5E9",  # 13. Sky - スカイ
-            "#A855F7",  # 14. Purple - パープル
-            "#22C55E",  # 15. Emerald - エメラルド
-        ]
         
-        for i, (user_name, _) in enumerate(sorted_users):
+        for user_name, _ in sorted_users:
             user_configs[user_name] = {
                 "label": user_name,
-                "color": colors[i % len(colors)]
+                "color": user_color_map.get(user_name, "#999999"),  # ユーザー名ベースの固定色
+                "work_hours_this_month": user_monthly_work_hours_display.get(user_name, "0h"),  # 今月の勤務時間
+                "work_minutes_this_month": user_monthly_work_minutes.get(user_name, 0)  # 今月の勤務時間（分）
             }
         
         return {
@@ -436,32 +445,18 @@ async def get_monthly_by_user(
             
             chart_data.append(data_point)
         
+        # すべてのユーザー名を取得して色を割り当て
+        all_user_names = list(user_time_data.keys())
+        user_color_map = get_all_user_colors(all_user_names)
+        
         # ユーザー設定（名前と色）
         user_configs = {}
-        # 統一されたカラーパレット（15人分）
-        colors = [
-            "#3B82F6",  # 1. Blue - 青
-            "#10B981",  # 2. Green - 緑
-            "#F59E0B",  # 3. Orange - オレンジ
-            "#8B5CF6",  # 4. Purple - 紫
-            "#EF4444",  # 5. Red - 赤
-            "#06B6D4",  # 6. Cyan - シアン
-            "#EC4899",  # 7. Pink - ピンク
-            "#14B8A6",  # 8. Teal - ティール
-            "#F97316",  # 9. Dark Orange - ダークオレンジ
-            "#84CC16",  # 10. Lime - ライム
-            "#6366F1",  # 11. Indigo - インディゴ
-            "#F43F5E",  # 12. Rose - ローズ
-            "#0EA5E9",  # 13. Sky - スカイ
-            "#A855F7",  # 14. Purple - パープル
-            "#22C55E",  # 15. Emerald - エメラルド
-        ]
         
-        for i, (user_name, user_data) in enumerate(sorted_users):
+        for user_name, user_data in sorted_users:
             total_time = user_data["total_time_formatted"]
             user_configs[user_name] = {
                 "label": user_name,
-                "color": colors[i % len(colors)],
+                "color": user_color_map.get(user_name, "#999999"),  # ユーザー名ベースの固定色
                 "total": total_time
             }
         

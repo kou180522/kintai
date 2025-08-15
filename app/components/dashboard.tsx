@@ -270,7 +270,7 @@ export function Dashboard() {
                     <CardContent className="p-2.5">
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                          ユーザー一覧（クリックで詳細表示）
+                          ユーザー一覧（今月の勤務時間順）
                         </h3>
                         {highlightedUser && (
                           <button
@@ -283,24 +283,9 @@ export function Dashboard() {
                       </div>
                       <div className="grid grid-cols-4 gap-x-4 gap-y-1">
                         {topUsers.map((userName, index) => {
-                          const colors = [
-                            "#3B82F6", // 1. 鮮やかな青
-                            "#10B981", // 2. エメラルドグリーン
-                            "#F97316", // 3. 鮮やかなオレンジ
-                            "#8B5CF6", // 4. 紫
-                            "#EF4444", // 5. 赤
-                            "#06B6D4", // 6. シアン
-                            "#D946EF", // 7. フクシア
-                            "#EC4899", // 8. ピンク
-                            "#14B8A6", // 9. ティール
-                            "#EAB308", // 10. イエロー
-                            "#84CC16", // 11. ライムグリーン
-                            "#6366F1", // 12. インディゴ
-                            "#F43F5E", // 13. ローズ
-                            "#0EA5E9", // 14. スカイブルー
-                            "#A78BFA", // 15. ラベンダー
-                          ]
-                          const color = colors[index % colors.length]
+                          // APIから受け取った色を使用
+                          const config = chartConfig[userName]
+                          const color = config ? config.color : "#999999"
                           
                           return (
                             <div 
@@ -338,25 +323,8 @@ export function Dashboard() {
             
             {/* ポップアップ */}
             {showPopup && popupUser && userMonthlyTotal[popupUser] && (() => {
-              const userIndex = topUsers.indexOf(popupUser)
-              const colors = [
-                "#3B82F6", // 1. 鮮やかな青
-                "#10B981", // 2. エメラルドグリーン
-                "#F97316", // 3. 鮮やかなオレンジ
-                "#8B5CF6", // 4. 紫
-                "#EF4444", // 5. 赤
-                "#06B6D4", // 6. シアン
-                "#D946EF", // 7. フクシア
-                "#EC4899", // 8. ピンク
-                "#14B8A6", // 9. ティール
-                "#EAB308", // 10. イエロー
-                "#84CC16", // 11. ライムグリーン
-                "#6366F1", // 12. インディゴ
-                "#F43F5E", // 13. ローズ
-                "#0EA5E9", // 14. スカイブルー
-                "#A78BFA", // 15. ラベンダー
-              ]
-              const userColor = colors[userIndex % colors.length]
+              const config = chartConfig[popupUser]
+              const userColor = config ? config.color : "#999999"
               
               return (
                 <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
