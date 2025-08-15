@@ -76,33 +76,34 @@ export default function Guidelines() {
               <div className="space-y-3 text-gray-700 dark:text-gray-300">
                 <p>記録を忘れた場合や、実際の勤務時刻と異なる時刻に記録してしまった場合の調整方法：</p>
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-l-4 border-blue-500">
-                  <p className="font-medium mb-3">調整パターン：</p>
+                  <p className="font-medium mb-3">調整パターン（新計算方式）：</p>
                   <ul className="space-y-3 ml-4">
                     <li>
-                      <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">s+90</code> - 現在時刻から90分後の時刻として記録
+                      <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">s+60</code> - 勤務時間を60分増やす
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        例：10:00に記録 → 11:30として記録される
+                        例：9:00打刻〜18:00打刻 = 基本9時間 + 60分 = <span className="font-semibold">10時間</span>
                       </p>
                     </li>
                     <li>
-                      <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">s-30</code> - 現在時刻から30分前の時刻として記録
+                      <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">s-30</code> - 勤務時間を30分減らす
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        例：10:00に記録 → 9:30として記録される
+                        例：9:00打刻〜18:00打刻 = 基本9時間 - 30分 = <span className="font-semibold">8時間30分</span>
                       </p>
                     </li>
                     <li>
-                      <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">f-120</code> - 2時間前に終了したものとして記録
+                      <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">f+120</code> - 勤務時間を120分増やす
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        例：20:00に記録 → 18:00として記録される
+                        例：9:00打刻〜18:00打刻 = 基本9時間 + 120分 = <span className="font-semibold">11時間</span>
                       </p>
                     </li>
                   </ul>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                  <p className="font-medium mb-2">使用例：</p>
+                  <p className="font-medium mb-2">使用例（新計算方式）：</p>
                   <ul className="text-sm space-y-2">
-                    <li>• 朝9時に出社したが記録を忘れ、10時半に気づいた場合：<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">s-90</code></li>
-                    <li>• 18時に退社したが記録を忘れ、20時に気づいた場合：<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">f-120</code></li>
+                    <li>• 朝8時に出社したが9時に打刻した場合：<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">s+60</code>（勤務時間+60分）</li>
+                    <li>• 18時に退社予定が17時に早退した場合：<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">f-60</code>（勤務時間-60分）</li>
+                    <li>• 残業で19時まで働いた場合：<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">f+60</code>（勤務時間+60分）</li>
                   </ul>
                 </div>
                 <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border-l-4 border-indigo-500">
@@ -137,12 +138,22 @@ export default function Guidelines() {
                   </div>
                 </div>
                 <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
-                  <p className="text-sm"><span className="font-semibold">重要：</span></p>
-                  <ul className="text-sm space-y-1 ml-4 mt-2">
-                    <li>• 調整値は必ず分単位で指定してください（60 = 1時間）</li>
-                    <li>• マイナス値で過去、プラス値で未来の時刻になります</li>
-                    <li>• 日付をまたぐ調整も自動的に処理されます</li>
+                  <p className="text-sm"><span className="font-semibold">新しい計算方式の詳細：</span></p>
+                  <ul className="text-sm space-y-2 ml-4 mt-2">
+                    <li>• <span className="font-semibold">ステップ1：</span> 打刻された開始時刻と終了時刻の差分を計算（基本勤務時間）</li>
+                    <li>• <span className="font-semibold">ステップ2：</span> 調整時間を基本勤務時間に加減算</li>
+                    <li>• <span className="font-semibold">プラス調整：</span> 実際にはもっと早く/長く働いた場合（勤務時間増加）</li>
+                    <li>• <span className="font-semibold">マイナス調整：</span> 実際にはもっと遅く/短く働いた場合（勤務時間減少）</li>
                   </ul>
+                  <div className="bg-white dark:bg-gray-900 p-3 rounded mt-3">
+                    <p className="text-xs font-mono">
+                      計算例：9:00(s+60) - 18:00(f+30)<br/>
+                      1. 基本勤務時間 = 18:00 - 9:00 = 9時間（540分）<br/>
+                      2. 開始調整 = +60分（8:00から働いた）<br/>
+                      3. 終了調整 = +30分（18:30まで働いた）<br/>
+                      4. 合計 = 540 + 60 + 30 = 630分（10時間30分）
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>

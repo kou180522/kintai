@@ -1,13 +1,12 @@
 """
-CSVデータローダー（改良版）
-開始と終了の差分を計算してから調整時間を適用
+CSVデータローダー（修正版）
+特殊なステータスコード（s+XX）と日跨ぎを正しく処理
 """
 import csv
 import os
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Tuple, Optional
+from typing import List, Dict, Any
 from collections import defaultdict
-import re
 
 class CSVLoader:
     def __init__(self):
@@ -109,57 +108,119 @@ class CSVLoader:
                 return user
         return None
     
-    def parse_adjustment_from_message(self, message: str) -> Optional[int]:
+    def parse_status_with_adjustment(self, status: str, message: str, time: str):
         """
-        メッセージから調整時間（分）を抽出
-        例: "s+60", "f-30", "s + 60" など
-        返り値: 調整分数（正または負）、調整情報がない場合はNone
+        ステータスコードを解析して調整時間を取得
+        s+90 のような形式から調整分数を抽出
+        messageフィールドも確認して調整時間を取得
         """
-        if not message:
-            return None
-            
-        message_lower = message.lower().strip()
+        if not status or not time:
+            return None, None, 0
         
-        # +/- の調整パターンをチェック（スペースあり・なし両対応）
-        match = re.search(r'[sf]?\s*([\+\-])\s*(\d+)', message_lower)
-        if match:
-            sign = match.group(1)
-            value = int(match.group(2))
-            adjustment_minutes = value if sign == '+' else -value
-            print(f"調整時間検出: {message} → {adjustment_minutes}分")
-            return adjustment_minutes
-            
-        return None
-    
-    def parse_status(self, status: str, message: str) -> str:
-        """
-        ステータスを正規化（開始/終了）
-        """
-        if not status:
-            return None
-            
-        status_lower = status.lower().strip()
+        status_lower = status.lower()
+        adjustment_minutes = 0
         
-        # メッセージからもステータスを推測
+        # messageフィールドをチェック
         if message:
             message_lower = message.lower()
-            if message_lower.startswith('s'):
-                return "start"
-            elif message_lower.startswith('f'):
-                return "end"
+            import re
+            
+            # s18:00 や s 18:00 や f19:30 のような時刻指定形式を最初にチェック（スペースあり・なし両対応）
+            time_match = re.search(r'([sf])\s*(\d{1,2}):(\d{2})', message_lower)
+            if time_match:
+                status_type = time_match.group(1)
+                specified_hour = int(time_match.group(2))
+                specified_minute = int(time_match.group(3))
+                
+                # 基本ステータスを設定
+                if status_type == 's':
+                    base_status = 'start'
+                else:
+                    base_status = 'end'
+                
+                # 指定時刻を直接返す
+                adjusted_time = f"{specified_hour:02d}:{specified_minute:02d}"
+                print(f"時刻指定検出: {message} → {adjusted_time}")
+                return base_status, adjusted_time, 0
+            
+            # s+60, s -60, f+30, f -20 などのパターンをチェック（スペースあり・なし両対応）
+            elif '+' in message_lower or '-' in message_lower:
+                # スペースを含む可能性があるパターンに対応
+                match = re.search(r'([sf])\s*([\+\-])\s*(\d+)', message_lower)
+                if match:
+                    sign = match.group(2)
+                    value = int(match.group(3))
+                    adjustment_minutes = value if sign == '+' else -value
+                    # messageから基本ステータスも取得
+                    if match.group(1) == 's':
+                        status_lower = 's'
+                    elif match.group(1) == 'f':
+                        status_lower = 'f'
+                    print(f"メッセージから調整検出: {message} → {adjustment_minutes}分調整")
+        
+        # messageに調整情報がない場合はstatusフィールドをチェック
+        elif '+' in status_lower or '-' in status_lower:
+            import re
+            # スペースを含む可能性があるパターンに対応
+            match = re.search(r'([sf])\s*([\+\-])\s*(\d+)', status_lower)
+            if match:
+                sign = match.group(2)
+                value = int(match.group(3))
+                adjustment_minutes = value if sign == '+' else -value
+                status_lower = match.group(1)
         
         # 基本ステータスの判定
         if status_lower in ["開始", "s", "start"]:
-            return "start"
+            base_status = "start"
         elif status_lower in ["終了", "f", "finish", "end"]:
-            return "end"
+            base_status = "end"
         else:
-            return None
+            return None, None, 0
+        
+        # 時刻のパース
+        try:
+            time_parts = time.split(":")
+            if len(time_parts) >= 2:
+                hours = int(time_parts[0])
+                minutes = int(time_parts[1])
+                # 調整時間を適用（開始時は減算、終了時は加算）
+                if base_status == "start":
+                    # 開始時刻を早める（s+90 = 90分前から勤務開始）
+                    total_minutes = hours * 60 + minutes - adjustment_minutes
+                else:
+                    # 終了時刻を遅らせる（f+30 = 30分後まで勤務、f-20 = 20分前に終了）
+                    total_minutes = hours * 60 + minutes + adjustment_minutes
+                
+                # 負の値の場合の処理
+                if total_minutes < 0:
+                    # 前日の時刻として計算
+                    adjusted_hours = 24 + (total_minutes // 60)
+                    adjusted_minutes = total_minutes % 60
+                    if adjusted_minutes < 0:
+                        adjusted_hours -= 1
+                        adjusted_minutes = 60 + adjusted_minutes
+                    date_adjustment = -1
+                elif total_minutes >= 24 * 60:
+                    # 翌日の時刻として計算
+                    adjusted_hours = (total_minutes // 60) % 24
+                    adjusted_minutes = total_minutes % 60
+                    date_adjustment = 1
+                else:
+                    adjusted_hours = total_minutes // 60
+                    adjusted_minutes = total_minutes % 60
+                    date_adjustment = 0
+                
+                adjusted_time = f"{adjusted_hours:02d}:{adjusted_minutes:02d}"
+                return base_status, adjusted_time, date_adjustment
+        except Exception as e:
+            print(f"時刻パースエラー: {e}")
+        
+        return base_status, time, 0
     
     def get_user_time_data(self) -> Dict[str, Any]:
-        """各ユーザーの時間データを集計（改良版：差分計算後に調整適用）"""
+        """各ユーザーの時間データを集計（修正版）"""
         user_time_data = {}
-        user_all_timestamps = defaultdict(list)
+        user_all_timestamps = {}  # ユーザー別の全タイムスタンプ（時系列順）
         
         # 全レコードをユーザー別に収集
         for record in self.attendance_records:
@@ -172,32 +233,38 @@ class CSVLoader:
             status = record.get("status", "")
             message = record.get("message", "")
             
-            # ステータスを正規化
-            base_status = self.parse_status(status, message)
+            # ステータスと調整時間を解析（messageフィールドも渡す）
+            base_status, adjusted_time, date_adjustment = self.parse_status_with_adjustment(status, message, time)
+            
             if not base_status:
                 continue
             
-            # 調整時間を取得（後で使用）
-            adjustment_minutes = self.parse_adjustment_from_message(message)
+            # 調整がある場合はログ出力
+            if time != adjusted_time and message:
+                print(f"調整検出: {user_name} {date} {time} {message} → {adjusted_time}")
             
-            # タイムスタンプを記録（調整前の時刻）
-            # 時刻を適切にパディング（例: "9:31" -> "09:31"）
-            time_parts = time.split(":")
-            if len(time_parts) == 2:
-                hour = time_parts[0].zfill(2)  # 時間を2桁にパディング
-                minute = time_parts[1].zfill(2)  # 分を2桁にパディング
-                formatted_time = f"{hour}:{minute}"
-            else:
-                formatted_time = time
+            # 日付調整が必要な場合
+            adjusted_date = date
+            if date_adjustment != 0:
+                try:
+                    dt = datetime.strptime(date, "%Y/%m/%d")
+                    dt += timedelta(days=date_adjustment)
+                    adjusted_date = dt.strftime("%Y/%m/%d")
+                except:
+                    pass
             
+            if user_name not in user_all_timestamps:
+                user_all_timestamps[user_name] = []
+            
+            # タイムスタンプを記録
+            # メッセージフィールドも保存（s+90などの元の情報として）
             user_all_timestamps[user_name].append({
-                "date": date,
-                "time": time,  # 調整前の実際の時刻
+                "date": adjusted_date,
+                "time": adjusted_time,
                 "status": base_status,
-                "adjustment_minutes": adjustment_minutes,  # 調整時間を保存
                 "original_status": status,
                 "message": message,
-                "datetime_str": f"{date} {formatted_time}"  # ソート用にフォーマット済み時刻を使用
+                "datetime_str": f"{adjusted_date} {adjusted_time}"
             })
         
         # 各ユーザーの勤務時間を計算
@@ -228,7 +295,8 @@ class CSVLoader:
                 if ts["status"] == "start":
                     # 既に開始時刻がある場合（連続するstart）
                     if current_start:
-                        print(f"警告: {user_name} - 連続する開始時刻を検出、最初の開始時刻を無視")
+                        # 連続するstartの場合、最初のstartを無視して2番目を採用
+                        print(f"警告: {user_name} - 連続する開始時刻を検出、最初の開始時刻を無視: {current_start['date']} {current_start['time']} → {ts['date']} {ts['time']}")
                     current_start = ts
                     i += 1
                     
@@ -239,7 +307,7 @@ class CSVLoader:
                         i += 1
                         continue
                     
-                    # 基本の勤務時間を計算（調整前）
+                    # 勤務時間を計算
                     try:
                         start_parts = current_start["time"].split(":")
                         end_parts = ts["time"].split(":")
@@ -265,7 +333,7 @@ class CSVLoader:
                                         end_total_min += days_diff * 24 * 60
                                     else:
                                         # 日付逆転（エラー）
-                                        print(f"エラー: {user_name} - 日付逆転")
+                                        print(f"エラー: {user_name} - 日付逆転 {current_start['date']} → {ts['date']}")
                                         current_start = None
                                         i += 1
                                         continue
@@ -275,41 +343,22 @@ class CSVLoader:
                                 # 同日でも終了が開始より前 = 日跨ぎ
                                 end_total_min += 24 * 60
                             
-                            # 基本の勤務時間（調整前）
-                            base_work_minutes = end_total_min - start_total_min
-                            
-                            # ここで調整時間を適用
-                            # 開始時の調整：マイナスで勤務時間増加、プラスで勤務時間減少
-                            # 終了時の調整：プラスで勤務時間増加、マイナスで勤務時間減少
-                            adjusted_work_minutes = base_work_minutes
-                            
-                            if current_start["adjustment_minutes"] is not None:
-                                # 開始時の調整（s+60 = 60分早く始めた = 勤務時間+60分）
-                                adjusted_work_minutes += current_start["adjustment_minutes"]
-                                print(f"開始時調整適用: {user_name} {current_start['date']} - 基本{base_work_minutes}分 + 調整{current_start['adjustment_minutes']}分")
-                            
-                            if ts["adjustment_minutes"] is not None:
-                                # 終了時の調整（f+30 = 30分長く働いた = 勤務時間+30分）
-                                adjusted_work_minutes += ts["adjustment_minutes"]
-                                print(f"終了時調整適用: {user_name} {ts['date']} - 現在{adjusted_work_minutes-ts['adjustment_minutes']}分 + 調整{ts['adjustment_minutes']}分")
+                            work_minutes = end_total_min - start_total_min
                             
                             # 異常値チェック（24時間超えは無効）
-                            if adjusted_work_minutes > 24 * 60:
-                                print(f"エラー: {user_name} - 24時間超過を検出 = {adjusted_work_minutes}分")
+                            if work_minutes > 24 * 60:
+                                print(f"エラー: {user_name} - 24時間超過を検出 {current_start['date']} {current_start['time']} → {ts['date']} {ts['time']} = {work_minutes}分")
                                 current_start = None
                                 i += 1
                                 continue
                             
-                            if adjusted_work_minutes > 0:
+                            if work_minutes > 0:
                                 work_sessions.append({
                                     "start_date": current_start["date"],
                                     "start_time": current_start["time"],
                                     "end_date": ts["date"],
                                     "end_time": ts["time"],
-                                    "base_work_minutes": base_work_minutes,  # 調整前
-                                    "work_minutes": adjusted_work_minutes,    # 調整後
-                                    "start_adjustment": current_start["adjustment_minutes"],
-                                    "end_adjustment": ts["adjustment_minutes"],
+                                    "work_minutes": work_minutes,
                                     "original_start_status": current_start.get("original_status", ""),
                                     "original_end_status": ts.get("original_status", "")
                                 })
@@ -393,7 +442,7 @@ class CSVLoader:
         # 総勤務時間でソート
         sorted_users = sorted(
             user_time_data.items(),
-            key=lambda x: x[1]["total_hours"] * 60 + x[1]["total_minutes"],
+            key=lambda x: x[1]["total_minutes"],
             reverse=True
         )[:top_users]
         
@@ -439,8 +488,9 @@ class CSVLoader:
                   "#06B6D4", "#EC4899", "#14B8A6", "#F97316", "#84CC16"]
         
         for i, (user_name, user_data) in enumerate(sorted_users):
-            total_h = user_data["total_hours"]
-            total_m = user_data["total_minutes"]
+            total_min = user_data["total_minutes"]
+            total_h = total_min // 60
+            total_m = total_min % 60
             
             user_configs[user_name] = {
                 "label": user_name,

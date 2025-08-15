@@ -181,15 +181,6 @@ class CSVLoader:
             adjustment_minutes = self.parse_adjustment_from_message(message)
             
             # タイムスタンプを記録（調整前の時刻）
-            # 時刻を適切にパディング（例: "9:31" -> "09:31"）
-            time_parts = time.split(":")
-            if len(time_parts) == 2:
-                hour = time_parts[0].zfill(2)  # 時間を2桁にパディング
-                minute = time_parts[1].zfill(2)  # 分を2桁にパディング
-                formatted_time = f"{hour}:{minute}"
-            else:
-                formatted_time = time
-            
             user_all_timestamps[user_name].append({
                 "date": date,
                 "time": time,  # 調整前の実際の時刻
@@ -197,7 +188,7 @@ class CSVLoader:
                 "adjustment_minutes": adjustment_minutes,  # 調整時間を保存
                 "original_status": status,
                 "message": message,
-                "datetime_str": f"{date} {formatted_time}"  # ソート用にフォーマット済み時刻を使用
+                "datetime_str": f"{date} {time}"
             })
         
         # 各ユーザーの勤務時間を計算
