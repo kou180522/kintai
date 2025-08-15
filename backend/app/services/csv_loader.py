@@ -125,8 +125,8 @@ class CSVLoader:
             message_lower = message.lower()
             import re
             
-            # s18:00 や f19:30 のような時刻指定形式を最初にチェック
-            time_match = re.search(r'([sf])(\d{1,2}):(\d{2})', message_lower)
+            # s18:00 や s 18:00 や f19:30 のような時刻指定形式を最初にチェック（スペースあり・なし両対応）
+            time_match = re.search(r'([sf])\s*(\d{1,2}):(\d{2})', message_lower)
             if time_match:
                 status_type = time_match.group(1)
                 specified_hour = int(time_match.group(2))
@@ -143,9 +143,10 @@ class CSVLoader:
                 print(f"時刻指定検出: {message} → {adjusted_time}")
                 return base_status, adjusted_time, 0
             
-            # s+60, f+30, f-20 などのパターンをチェック
+            # s+60, s -60, f+30, f -20 などのパターンをチェック（スペースあり・なし両対応）
             elif '+' in message_lower or '-' in message_lower:
-                match = re.search(r'([sf])([\+\-])(\d+)', message_lower)
+                # スペースを含む可能性があるパターンに対応
+                match = re.search(r'([sf])\s*([\+\-])\s*(\d+)', message_lower)
                 if match:
                     sign = match.group(2)
                     value = int(match.group(3))
@@ -160,7 +161,8 @@ class CSVLoader:
         # messageに調整情報がない場合はstatusフィールドをチェック
         elif '+' in status_lower or '-' in status_lower:
             import re
-            match = re.search(r'([sf])([\+\-])(\d+)', status_lower)
+            # スペースを含む可能性があるパターンに対応
+            match = re.search(r'([sf])\s*([\+\-])\s*(\d+)', status_lower)
             if match:
                 sign = match.group(2)
                 value = int(match.group(3))
