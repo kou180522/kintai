@@ -65,7 +65,7 @@ export default function Page2() {
     fetchUserMonthlyData();
   }, []);
 
-  // 自動更新（30秒ごと）
+  // 自動更新（10秒ごと）
   useEffect(() => {
     if (!autoRefresh) return;
     
@@ -73,7 +73,7 @@ export default function Page2() {
       handleApiCall();
       fetchUserMonthlyData();
       console.log('月別データを自動更新しました:', new Date().toLocaleTimeString());
-    }, 30000); // 30秒ごと
+    }, 10000); // 10秒ごと
     
     return () => clearInterval(interval);
   }, [autoRefresh]);

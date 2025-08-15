@@ -75,6 +75,9 @@ async def get_subpage_data(
     全ユーザーの勤務時間サマリーと月別データを返す
     """
     try:
+        # データを再読み込みしてから取得
+        csv_loader.reload_data()
+        
         # ユーザー時間データを取得
         user_time_data = csv_loader.get_user_time_data()
         
@@ -261,6 +264,8 @@ async def get_daily_chart_data(
     try:
         from datetime import datetime, timedelta
         
+        # データを再読み込みしてから取得
+        csv_loader.reload_data()
         user_time_data = csv_loader.get_user_time_data()
         
         # 直近7日間の勤務時間を計算してソート
@@ -371,6 +376,8 @@ async def get_monthly_by_user(
         from datetime import datetime
         from collections import defaultdict
         
+        # データを再読み込みしてから取得
+        csv_loader.reload_data()
         user_time_data = csv_loader.get_user_time_data()
         
         # ユーザーを勤務時間順にソート
