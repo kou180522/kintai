@@ -254,8 +254,9 @@ async def get_user_monthly_data(
 
 @router.get("/daily-chart")
 async def get_daily_chart_data(
-    days: int = Query(default=31, description="表示する日数"),
-    top_users: int = Query(default=15, description="表示するユーザー数")
+    days: int = Query(default=31, description="表示する日数（31の場合は今月表示）"),
+    top_users: int = Query(default=15, description="表示するユーザー数"),
+    month_offset: int = Query(default=0, description="何ヶ月前のデータを表示するか（0=今月、1=先月）")
 ):
     """
     日別勤務時間グラフ用のデータを取得
@@ -289,16 +290,43 @@ async def get_daily_chart_data(
             reverse=True
         )[:top_users]
         
-        # 日付リストを作成（過去N日分）
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days)
+        # 日付リストを作成（今月の1日から今日まで、またはmonth_offsetで指定された月）
+        now = datetime.now()
+        
+        # month_offsetで指定された月を計算
+        if month_offset > 0:
+            # 前月を計算
+            target_year = now.year
+            target_month = now.month - month_offset
+            while target_month <= 0:
+                target_month += 12
+                target_year -= 1
+            
+            # 指定月の1日から月末まで
+            start_date = datetime(target_year, target_month, 1)
+            # 月末を計算
+            if target_month == 12:
+                end_date = datetime(target_year, 12, 31)
+            else:
+                end_date = datetime(target_year, target_month + 1, 1) - timedelta(days=1)
+        elif days == 31:  # デフォルト値の場合は今月の1日から今日まで
+            start_date = datetime(now.year, now.month, 1)
+            end_date = now
+        else:
+            # 指定された日数分遡る
+            end_date = now
+            start_date = end_date - timedelta(days=days)
+        
         date_list = []
         current_date = start_date
         
         while current_date <= end_date:
             date_str = current_date.strftime("%Y/%m/%d")
-            # 月と日だけ表示用（01/15のような形式）
-            display_date = current_date.strftime("%m/%d")
+            # 日だけ表示用（15のような形式）- 月単位表示の場合
+            if days == 31 and start_date.day == 1:
+                display_date = current_date.strftime("%d")  # 日のみ
+            else:
+                display_date = current_date.strftime("%m/%d")  # 月/日
             date_list.append((display_date, date_str))  # タプルで両方保持
             current_date += timedelta(days=1)
         

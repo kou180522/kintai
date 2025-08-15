@@ -38,6 +38,7 @@ export function Dashboard() {
   const [userMonthlyTotal, setUserMonthlyTotal] = useState<{[key: string]: {hours: number, minutes: number}}>({})
   const [showPopup, setShowPopup] = useState(false)
   const [popupUser, setPopupUser] = useState<string | null>(null)
+  const [monthOffset, setMonthOffset] = useState(0) // 0=今月, 1=先月, 2=先々月
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -50,7 +51,7 @@ export function Dashboard() {
   // グラフデータを取得
   useEffect(() => {
     fetchChartData()
-  }, [])
+  }, [monthOffset]) // monthOffsetが変更されたら再取得
 
   // 自動更新（30秒ごと）
   useEffect(() => {
@@ -62,13 +63,13 @@ export function Dashboard() {
     }, 30000) // 30秒ごと
     
     return () => clearInterval(interval)
-  }, [autoRefresh])
+  }, [autoRefresh, monthOffset])
 
   const fetchChartData = async () => {
     setIsChartLoading(true)
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001'
-      const response = await fetch(`${apiUrl}/api/subpage/daily-chart?days=31&top_users=15`)
+      const response = await fetch(`${apiUrl}/api/subpage/daily-chart?days=31&top_users=15&month_offset=${monthOffset}`)
       
       if (response.ok) {
         const data = await response.json()
@@ -79,22 +80,15 @@ export function Dashboard() {
           setTopUsers(Object.keys(data.user_configs))
           setLastUpdateTime(new Date())
           
-          // 各ユーザーの今月の合計時間を計算（今日までの分）
-          const today = new Date()
-          const currentMonth = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}`
+          // 各ユーザーの表示中の月の合計時間を計算
           const monthlyTotals: {[key: string]: {hours: number, minutes: number}} = {}
           
           Object.keys(data.user_configs).forEach(userName => {
             let totalHours = 0
             data.chart_data.forEach((day: any) => {
-              // 今月のデータのみを集計
-              const dayDate = day.date
-              if (dayDate && day[userName] !== null && day[userName] !== undefined) {
-                // 現在の月のデータか確認（MM/DD形式から判断）
-                const currentMonthStr = String(today.getMonth() + 1).padStart(2, '0')
-                if (dayDate.startsWith(currentMonthStr + '/')) {
-                  totalHours += day[userName]
-                }
+              // 全データを集計（すでに月でフィルタされている）
+              if (day[userName] !== null && day[userName] !== undefined) {
+                totalHours += day[userName]
               }
             })
             const hours = Math.floor(totalHours)
@@ -390,7 +384,16 @@ export function Dashboard() {
                         {userMonthlyTotal[popupUser].hours}時間{userMonthlyTotal[popupUser].minutes}分
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                        今月の累計勤務時間
+                        {(() => {
+                          const now = new Date()
+                          let targetMonth = now.getMonth() + 1 - monthOffset
+                          let targetYear = now.getFullYear()
+                          while (targetMonth <= 0) {
+                            targetMonth += 12
+                            targetYear--
+                          }
+                          return monthOffset === 0 ? '今月の累計勤務時間' : `${targetMonth}月の累計勤務時間`
+                        })()}
                       </div>
                     </div>
                     <button
@@ -418,12 +421,32 @@ export function Dashboard() {
                   </div>
                   <div>
                     <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
-                      勤務時間推移
+                      {(() => {
+                        const now = new Date()
+                        const targetMonth = now.getMonth() + 1 - monthOffset
+                        const targetYear = now.getFullYear() - Math.floor((monthOffset - (now.getMonth() - targetMonth + 1)) / 12)
+                        return monthOffset === 0 ? '今月の日別勤務時間' : `${targetMonth}月の日別勤務時間`
+                      })()}
                     </CardTitle>
                     <CardDescription className="text-sm text-gray-600 dark:text-gray-300">
                       {isChartLoading ? 'データ読み込み中...' : 
-                       topUsers.length > 0 ? `全${topUsers.length}人のユーザーを表示中` : 
-                       '日別の勤務時間を表示しています'}
+                       (() => {
+                         const now = new Date()
+                         let targetMonth = now.getMonth() + 1 - monthOffset
+                         let targetYear = now.getFullYear()
+                         while (targetMonth <= 0) {
+                           targetMonth += 12
+                           targetYear--
+                         }
+                         if (monthOffset === 0) {
+                           return topUsers.length > 0 ? `${targetMonth}月1日〜${now.getDate()}日（全${topUsers.length}人）` : '今月の日別勤務時間を表示しています'
+                         } else {
+                           // 前月の場合は月末まで表示
+                           const lastDay = new Date(targetYear, targetMonth, 0).getDate()
+                           return topUsers.length > 0 ? `${targetMonth}月1日〜${lastDay}日（全${topUsers.length}人）` : `${targetMonth}月の日別勤務時間を表示しています`
+                         }
+                       })()
+                      }
                       {!isChartLoading && (
                         <span className="ml-2 text-sm">
                           最終更新: {lastUpdateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
@@ -438,6 +461,44 @@ export function Dashboard() {
                 
                 {/* 更新ボタン（右側） */}
                 <div className="flex justify-end gap-2">
+                  {/* 月切り替えボタン */}
+                  <div className="flex items-center gap-1 bg-white/80 dark:bg-gray-800/80 rounded-lg px-2">
+                    <button
+                      onClick={() => setMonthOffset(Math.min(monthOffset + 1, 12))}
+                      disabled={monthOffset >= 12}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="前月"
+                    >
+                      <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px] text-center">
+                      {(() => {
+                        const now = new Date()
+                        let targetMonth = now.getMonth() + 1 - monthOffset
+                        let targetYear = now.getFullYear()
+                        while (targetMonth <= 0) {
+                          targetMonth += 12
+                          targetYear--
+                        }
+                        return `${targetYear}年${targetMonth}月`
+                      })()}
+                    </span>
+                    
+                    <button
+                      onClick={() => setMonthOffset(Math.max(monthOffset - 1, 0))}
+                      disabled={monthOffset === 0}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="次月"
+                    >
+                      <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                  
                   {/* 自動更新トグル */}
                   <button
                     onClick={() => setAutoRefresh(!autoRefresh)}
