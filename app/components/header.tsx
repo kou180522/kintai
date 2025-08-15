@@ -3,7 +3,7 @@ import { ThemeToggle } from "./theme-toggle";
 
 export function Header() {
   const location = useLocation();
-  const isOnHistoryPage = location.pathname === "/page2";
+  const isOnHistoryPage = location.pathname === "/history";
   const isOnGuidelinePage = location.pathname === "/guidelines";
   
   return (
@@ -51,9 +51,8 @@ export function Header() {
           
           {/* 履歴ボタン */}
           <Link
-            to={isOnHistoryPage ? "/" : "/page2"}
+            to={isOnHistoryPage ? "/" : "/history"}
             className="relative group z-10"
-            onClick={() => console.log(isOnHistoryPage ? "ホームへ戻る" : "履歴ページへ")}
           >
             <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-gray-300 rounded-lg opacity-100 blur-[1px] transition-all duration-300 group-hover:blur-[2px]"></div>
             <div className="relative z-10 flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border-0">

@@ -1,4 +1,4 @@
-import type { Route } from "./+types/page2";
+import type { Route } from "./+types/history";
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -18,31 +18,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Labe
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "履歴" },
-    { name: "description", content: "履歴ページ" },
+    { title: "勤怠Pro - 月別統計" },
+    { name: "description", content: "月別勤務時間統計" },
   ];
 }
-
-// 過去12ヶ月の月別データを生成
-const generateMonthlyData = () => {
-  const data = [];
-  const today = new Date();
-  const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-  
-  for (let monthOffset = 11; monthOffset >= 0; monthOffset--) {
-    const targetDate = new Date(today.getFullYear(), today.getMonth() - monthOffset, 1);
-    const year = targetDate.getFullYear();
-    const month = targetDate.getMonth();
-    
-    data.push({
-      month: `${year}年${monthNames[month]}`,
-    });
-  }
-  
-  return data;
-};
-
-const chartData = generateMonthlyData();
 
 const chartConfig = {} satisfies ChartConfig;
 
@@ -111,7 +90,6 @@ export default function Page2() {
         setMonthlyChartData(chartData);
       }
       
-      // データ取得成功（alertは削除）
     } catch (error) {
       console.error('APIエラー:', error);
       setError(error instanceof Error ? error.message : 'API呼び出しエラー');
@@ -253,7 +231,6 @@ export default function Page2() {
               </div>
             )}
             <div className="w-full h-full">
-              {/* console.log('Chart data:', userMonthlyData, 'Selected users:', selectedUsers) */}
               {userMonthlyData.length === 0 && !isLoading && (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -268,7 +245,7 @@ export default function Page2() {
               <ChartContainer config={chartConfig} className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={userMonthlyData.length > 0 ? userMonthlyData : chartData}
+                    data={userMonthlyData}
                     margin={{
                       top: 10,
                       right: 30,

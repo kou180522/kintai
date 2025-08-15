@@ -15,19 +15,11 @@ import {
 } from "~/components/ui/chart"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Label } from "recharts"
 
-// 初期データ（APIから取得するまでの仮データ）
-const initialChartData = [
-  { date: "01/01" },
-  { date: "01/02" },
-  { date: "01/03" },
-]
-
-// 初期設定（APIから取得するまでの仮設定）
 const initialChartConfig = {} satisfies ChartConfig
 
 export function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [chartData, setChartData] = useState(initialChartData)
+  const [chartData, setChartData] = useState<any[]>([])
   const [chartConfig, setChartConfig] = useState<ChartConfig>(initialChartConfig)
   const [isChartLoading, setIsChartLoading] = useState(false)
   const [topUsers, setTopUsers] = useState<string[]>([])
@@ -59,7 +51,6 @@ export function Dashboard() {
     
     const interval = setInterval(() => {
       fetchChartData()
-      console.log('データを自動更新しました:', new Date().toLocaleTimeString())
     }, 30000) // 30秒ごと
     
     return () => clearInterval(interval)
@@ -654,7 +645,7 @@ export function Dashboard() {
                                     return (
                                       <div key={entry.dataKey} className="flex items-center justify-between text-xs py-0.5">
                                         <span className="flex items-center gap-1.5">
-                                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
+                                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.stroke }}></span>
                                           <span className="font-medium">{entry.dataKey}:</span>
                                         </span>
                                         <span className="font-bold ml-2">{formattedValue || `${entry.value.toFixed(1)}時間`}</span>
@@ -687,25 +678,8 @@ export function Dashboard() {
                         const config = chartConfig[userName]
                         if (!config) return null
                         
-                        // 15人分の色の配列
-                        const colors = [
-                          "#3B82F6", // 1. 鮮やかな青
-                          "#10B981", // 2. エメラルドグリーン
-                          "#F97316", // 3. 鮮やかなオレンジ
-                          "#8B5CF6", // 4. 紫
-                          "#EF4444", // 5. 赤
-                          "#06B6D4", // 6. シアン
-                          "#D946EF", // 7. フクシア
-                          "#EC4899", // 8. ピンク
-                          "#14B8A6", // 9. ティール
-                          "#EAB308", // 10. イエロー
-                          "#84CC16", // 11. ライムグリーン
-                          "#6366F1", // 12. インディゴ
-                          "#F43F5E", // 13. ローズ
-                          "#0EA5E9", // 14. スカイブルー
-                          "#A78BFA", // 15. ラベンダー
-                        ]
-                        const color = colors[index % colors.length]
+                        // APIから受け取った色を使用
+                        const color = config.color
                         
                         const isHighlighted = highlightedUser === userName
                         const isOtherHighlighted = highlightedUser && highlightedUser !== userName

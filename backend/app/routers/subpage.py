@@ -269,24 +269,10 @@ async def get_daily_chart_data(
         csv_loader.reload_data()
         user_time_data = csv_loader.get_user_time_data()
         
-        # 直近7日間の勤務時間を計算してソート
-        recent_days = 7
-        recent_date = datetime.now() - timedelta(days=recent_days)
-        recent_date_str = recent_date.strftime("%Y/%m/%d")
-        
-        user_recent_hours = {}
-        for user_name, user_data in user_time_data.items():
-            recent_minutes = 0
-            for date_str, day_data in user_data.get("daily_hours", {}).items():
-                # 直近7日間のデータのみ集計
-                if date_str >= recent_date_str:
-                    recent_minutes += day_data.get("work_minutes", 0)
-            user_recent_hours[user_name] = recent_minutes
-        
-        # 直近の勤務時間が多い順にユーザーを取得（全15人）
+        # 総勤務時間でソート（月別グラフと同じ順序にするため）
         sorted_users = sorted(
             user_time_data.items(),
-            key=lambda x: user_recent_hours.get(x[0], 0),
+            key=lambda x: x[1]["total_hours"] * 60 + x[1]["total_minutes"],
             reverse=True
         )[:top_users]
         
@@ -354,22 +340,23 @@ async def get_daily_chart_data(
         
         # ユーザー情報（名前と色）
         user_configs = {}
+        # 統一されたカラーパレット（15人分）
         colors = [
-            "hsl(var(--chart-1))",   # 1. 青
-            "hsl(var(--chart-2))",   # 2. 緑
-            "hsl(var(--chart-3))",   # 3. オレンジ
-            "hsl(var(--chart-4))",   # 4. 紫
-            "hsl(var(--chart-5))",   # 5. 赤
-            "#06B6D4",               # 6. シアン
-            "#8B5CF6",               # 7. バイオレット
-            "#EC4899",               # 8. ピンク
-            "#14B8A6",               # 9. ティール
-            "#F59E0B",               # 10. アンバー
-            "#84CC16",               # 11. ライム
-            "#6366F1",               # 12. インディゴ
-            "#F43F5E",               # 13. ローズ
-            "#0EA5E9",               # 14. スカイ
-            "#A855F7",               # 15. パープル
+            "#3B82F6",  # 1. Blue - 青
+            "#10B981",  # 2. Green - 緑
+            "#F59E0B",  # 3. Orange - オレンジ
+            "#8B5CF6",  # 4. Purple - 紫
+            "#EF4444",  # 5. Red - 赤
+            "#06B6D4",  # 6. Cyan - シアン
+            "#EC4899",  # 7. Pink - ピンク
+            "#14B8A6",  # 8. Teal - ティール
+            "#F97316",  # 9. Dark Orange - ダークオレンジ
+            "#84CC16",  # 10. Lime - ライム
+            "#6366F1",  # 11. Indigo - インディゴ
+            "#F43F5E",  # 12. Rose - ローズ
+            "#0EA5E9",  # 13. Sky - スカイ
+            "#A855F7",  # 14. Purple - パープル
+            "#22C55E",  # 15. Emerald - エメラルド
         ]
         
         for i, (user_name, _) in enumerate(sorted_users):
@@ -451,22 +438,23 @@ async def get_monthly_by_user(
         
         # ユーザー設定（名前と色）
         user_configs = {}
+        # 統一されたカラーパレット（15人分）
         colors = [
-            "#3B82F6",  # 1. Blue
-            "#10B981",  # 2. Green  
-            "#F59E0B",  # 3. Orange
-            "#8B5CF6",  # 4. Purple
-            "#EF4444",  # 5. Red
-            "#06B6D4",  # 6. Cyan
-            "#EC4899",  # 7. Pink
-            "#14B8A6",  # 8. Teal
-            "#F97316",  # 9. Dark Orange
-            "#84CC16",  # 10. Lime
-            "#6366F1",  # 11. Indigo
-            "#F43F5E",  # 12. Rose
-            "#0EA5E9",  # 13. Sky
-            "#A855F7",  # 14. Purple
-            "#22C55E",  # 15. Emerald
+            "#3B82F6",  # 1. Blue - 青
+            "#10B981",  # 2. Green - 緑
+            "#F59E0B",  # 3. Orange - オレンジ
+            "#8B5CF6",  # 4. Purple - 紫
+            "#EF4444",  # 5. Red - 赤
+            "#06B6D4",  # 6. Cyan - シアン
+            "#EC4899",  # 7. Pink - ピンク
+            "#14B8A6",  # 8. Teal - ティール
+            "#F97316",  # 9. Dark Orange - ダークオレンジ
+            "#84CC16",  # 10. Lime - ライム
+            "#6366F1",  # 11. Indigo - インディゴ
+            "#F43F5E",  # 12. Rose - ローズ
+            "#0EA5E9",  # 13. Sky - スカイ
+            "#A855F7",  # 14. Purple - パープル
+            "#22C55E",  # 15. Emerald - エメラルド
         ]
         
         for i, (user_name, user_data) in enumerate(sorted_users):
