@@ -109,6 +109,31 @@ class CSVLoader:
                 return user
         return None
     
+    def parse_specific_time_from_message(self, message: str) -> Optional[str]:
+        """
+        メッセージから特定時刻を抽出
+        例: "s18:00", "f19:30", "s 18:00" など
+        返り値: 時刻文字列（HH:MM形式）、特定時刻がない場合はNone
+        """
+        if not message:
+            return None
+            
+        message_lower = message.lower().strip()
+        
+        # 特定時刻のパターンをチェック（s/fの後に時刻）
+        match = re.search(r'[sf]?\s*(\d{1,2}):(\d{2})', message_lower)
+        if match:
+            hour = int(match.group(1))
+            minute = int(match.group(2))
+            
+            # 時刻の妥当性チェック
+            if 0 <= hour <= 23 and 0 <= minute <= 59:
+                specific_time = f"{hour}:{minute:02d}"
+                print(f"特定時刻検出: {message} → {specific_time}")
+                return specific_time
+        
+        return None
+    
     def parse_adjustment_from_message(self, message: str) -> Optional[int]:
         """
         メッセージから調整時間（分）を抽出
@@ -119,6 +144,10 @@ class CSVLoader:
             return None
             
         message_lower = message.lower().strip()
+        
+        # 特定時刻指定がある場合は調整時間として扱わない
+        if self.parse_specific_time_from_message(message):
+            return None
         
         # +/- の調整パターンをチェック（スペースあり・なし両対応）
         match = re.search(r'[sf]?\s*([\+\-])\s*(\d+)', message_lower)
@@ -177,22 +206,31 @@ class CSVLoader:
             if not base_status:
                 continue
             
-            # 調整時間を取得（後で使用）
-            adjustment_minutes = self.parse_adjustment_from_message(message)
+            # 特定時刻の指定があるかチェック
+            specific_time = self.parse_specific_time_from_message(message)
             
-            # タイムスタンプを記録（調整前の時刻）
+            # 特定時刻がある場合はそれを使用、ない場合は記録時刻を使用
+            if specific_time:
+                actual_time = specific_time
+                adjustment_minutes = None  # 特定時刻指定の場合は調整時間なし
+            else:
+                actual_time = time
+                # 調整時間を取得（特定時刻がない場合のみ）
+                adjustment_minutes = self.parse_adjustment_from_message(message)
+            
+            # タイムスタンプを記録
             # 時刻を適切にパディング（例: "9:31" -> "09:31"）
-            time_parts = time.split(":")
+            time_parts = actual_time.split(":")
             if len(time_parts) == 2:
                 hour = time_parts[0].zfill(2)  # 時間を2桁にパディング
                 minute = time_parts[1].zfill(2)  # 分を2桁にパディング
                 formatted_time = f"{hour}:{minute}"
             else:
-                formatted_time = time
+                formatted_time = actual_time
             
             user_all_timestamps[user_name].append({
                 "date": date,
-                "time": time,  # 調整前の実際の時刻
+                "time": actual_time,  # 特定時刻または記録時刻
                 "status": base_status,
                 "adjustment_minutes": adjustment_minutes,  # 調整時間を保存
                 "original_status": status,
