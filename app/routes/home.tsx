@@ -3,8 +3,8 @@ import { Dashboard } from "../components/dashboard";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Dashboard" },
-    { name: "description", content: "Dashboard with charts and analytics" },
+    { title: "勤怠Pro - ホーム" },
+    { name: "description", content: "勤怠管理ダッシュボード" },
   ];
 }
 
