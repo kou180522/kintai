@@ -398,6 +398,7 @@ export function Dashboard() {
                            targetYear--
                          }
                          if (monthOffset === 0) {
+                           // 今月の場合は今日まで表示
                            return topUsers.length > 0 ? `${targetMonth}月1日〜${now.getDate()}日（全${topUsers.length}人）` : '今月の日別勤務時間を表示しています'
                          } else {
                            // 前月の場合は月末まで表示

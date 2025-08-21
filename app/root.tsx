@@ -36,7 +36,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body className="bg-white dark:bg-gray-900 transition-colors duration-500 ease-in-out">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ThemeTransition />
-          <Header />
           {children}
         </ThemeProvider>
         <ScrollRestoration />
@@ -51,6 +50,7 @@ export default function App() {
     <>
       <Meta />
       <Links />
+      <Header />
       <Outlet />
     </>
   );
