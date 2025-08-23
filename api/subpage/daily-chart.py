@@ -65,13 +65,45 @@ class handler(BaseHTTPRequestHandler):
         top_users = int(params.get('top_users', ['15'])[0])
         month_offset = int(params.get('month_offset', ['0'])[0])
         
-        # Load CSV data
-        csv_path = os.path.join(os.path.dirname(__file__), '../../data/attendance_data.csv')
+        # Load CSV data - Vercelではpublicディレクトリから読む
+        # ローカルとVercelの両方で動作するようにパスを調整
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        csv_paths = [
+            os.path.join(base_dir, 'public', 'attendance_data.csv'),
+            os.path.join(base_dir, 'data', 'attendance_data.csv'),
+            '/var/task/public/attendance_data.csv',  # Vercel runtime path
+            '/var/task/data/attendance_data.csv'
+        ]
+        
+        csv_path = None
+        for path in csv_paths:
+            if os.path.exists(path):
+                csv_path = path
+                break
+        
+        if not csv_path:
+            response = {
+                'success': False,
+                'error': 'CSV file not found',
+                'tried_paths': csv_paths
+            }
+            self.wfile.write(json.dumps(response).encode())
+            return
         
         # ユーザーごとの日別勤務時間を集計
         daily_hours = defaultdict(lambda: defaultdict(float))
         user_monthly_totals = defaultdict(float)
         
+        # 対象月を計算
+        now = datetime.now()
+        target_month = now.month - month_offset
+        target_year = now.year
+        
+        while target_month <= 0:
+            target_month += 12
+            target_year -= 1
+        
+        row_count = 0
         try:
             with open(csv_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
@@ -79,6 +111,7 @@ class handler(BaseHTTPRequestHandler):
                 sessions = defaultdict(list)  # ユーザーごとのセッション
                 
                 for row in reader:
+                    row_count += 1
                     if not row.get('日付') or not row.get('ユーザー'):
                         continue
                     
@@ -94,14 +127,6 @@ class handler(BaseHTTPRequestHandler):
                         continue
                     
                     # 月のフィルタリング
-                    now = datetime.now()
-                    target_month = now.month - month_offset
-                    target_year = now.year
-                    
-                    while target_month <= 0:
-                        target_month += 12
-                        target_year -= 1
-                    
                     if date.year != target_year or date.month != target_month:
                         continue
                     
@@ -125,15 +150,25 @@ class handler(BaseHTTPRequestHandler):
         sorted_users = sorted(user_monthly_totals.items(), key=lambda x: x[1], reverse=True)
         top_user_list = [user for user, _ in sorted_users[:top_users]]
         
+        # デバッグ: ユーザーが見つからない場合
+        if not top_user_list:
+            response = {
+                'success': False,
+                'error': 'No users found in data',
+                'debug': {
+                    'csv_path': csv_path,
+                    'row_count': row_count,
+                    'user_count': len(user_monthly_totals),
+                    'month_offset': month_offset,
+                    'target_month': target_month,
+                    'target_year': target_year
+                }
+            }
+            self.wfile.write(json.dumps(response).encode())
+            return
+        
         # チャートデータを生成
         chart_data = []
-        now = datetime.now()
-        target_month = now.month - month_offset
-        target_year = now.year
-        
-        while target_month <= 0:
-            target_month += 12
-            target_year -= 1
         
         # 月の日数を取得
         if target_month == 12:
