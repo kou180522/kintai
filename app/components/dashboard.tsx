@@ -8,6 +8,7 @@ import {
 } from "~/components/ui/card"
 import { Button } from "~/components/ui/button"
 import type { ChartConfig } from "~/components/ui/chart"
+import { getApiUrl, fetchApi } from "~/lib/api-client"
 import {
   ChartContainer,
   ChartTooltip,
@@ -59,12 +60,9 @@ export function Dashboard() {
   const fetchChartData = async () => {
     setIsChartLoading(true)
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001'
-      const response = await fetch(`${apiUrl}/api/subpage/daily-chart?days=31&top_users=15&month_offset=${monthOffset}`)
+      const data = await fetchApi(`/api/subpage/daily-chart?days=31&top_users=15&month_offset=${monthOffset}`)
       
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
+      if (data.success) {
           setChartData(data.chart_data)
           setChartConfig(data.user_configs)
           // トップユーザーのリストを取得
@@ -87,7 +85,6 @@ export function Dashboard() {
             monthlyTotals[userName] = { hours, minutes }
           })
           setUserMonthlyTotal(monthlyTotals)
-        }
       }
     } catch (error) {
       console.error('グラフデータ取得エラー:', error)
@@ -104,12 +101,11 @@ export function Dashboard() {
   // 起動時に監視を開始
   useEffect(() => {
     const startMonitoring = async () => {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001'
       try {
-        const response = await fetch(`${apiUrl}/monitor/start`, {
+        const data = await fetchApi('/api/monitor/start', {
           method: 'POST',
         })
-        if (response.ok) {
+        if (data.success) {
           console.log('Google Sheets監視を開始しました')
         }
       } catch (error) {
