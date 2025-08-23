@@ -4,20 +4,14 @@
  */
 
 export function getApiUrl(): string {
-  // ビルド時の環境変数を優先
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  // 開発環境
+  if (import.meta.env.DEV) {
+    return 'http://localhost:8001';
   }
   
-  // 本番環境かどうかをチェック
-  if (import.meta.env.PROD) {
-    // VercelやNetlifyなどの本番環境では、
-    // 同じドメインの/apiパスを使用（プロキシ経由）
-    return '';
-  }
-  
-  // 開発環境のデフォルト
-  return 'http://localhost:8001';
+  // 本番環境では同じドメインの/apiパスを使用
+  // Vercel Functionsが/apiで自動的にルーティングされる
+  return '';
 }
 
 export async function fetchApi(path: string, options?: RequestInit) {
