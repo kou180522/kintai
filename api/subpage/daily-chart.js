@@ -131,17 +131,9 @@ function generateSampleUsers(topUsers) {
 function processAttendanceData(records, days, topUsers, monthOffset) {
   const dailyHours = {};
   const userTotals = {};
+  const allMonths = new Set();
   
-  const now = new Date();
-  let targetMonth = now.getMonth() + 1 - monthOffset;
-  let targetYear = now.getFullYear();
-  
-  while (targetMonth <= 0) {
-    targetMonth += 12;
-    targetYear--;
-  }
-  
-  // Process records
+  // First pass: collect all available months and data
   records.forEach(row => {
     if (!row['日付'] || !row['ユーザー']) return;
     
@@ -154,43 +146,78 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
     const dateParts = dateStr.split('/');
     if (dateParts.length !== 3) return;
     
-    const date = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]);
+    const day = parseInt(dateParts[2]);
     
-    // Check if in target month
-    if (date.getFullYear() !== targetYear || date.getMonth() + 1 !== targetMonth) return;
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return;
     
-    // Process work time
+    allMonths.add(`${year}-${month}`);
+    
+    // Process work time for end status
     if (status === '終了' && workTime) {
       const hours = parseWorkTime(workTime);
       if (hours > 0) {
-        const dayKey = `${String(targetMonth).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+        const monthKey = `${year}-${month}`;
+        const dayKey = `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
         
-        if (!dailyHours[user]) dailyHours[user] = {};
-        if (!dailyHours[user][dayKey]) dailyHours[user][dayKey] = 0;
-        dailyHours[user][dayKey] += hours;
+        if (!dailyHours[monthKey]) dailyHours[monthKey] = {};
+        if (!dailyHours[monthKey][user]) dailyHours[monthKey][user] = {};
+        if (!dailyHours[monthKey][user][dayKey]) dailyHours[monthKey][user][dayKey] = 0;
         
-        if (!userTotals[user]) userTotals[user] = 0;
-        userTotals[user] += hours;
+        dailyHours[monthKey][user][dayKey] += hours;
+        
+        if (!userTotals[monthKey]) userTotals[monthKey] = {};
+        if (!userTotals[monthKey][user]) userTotals[monthKey][user] = 0;
+        userTotals[monthKey][user] += hours;
       }
     }
   });
   
-  // Sort users by total hours
-  const sortedUsers = Object.entries(userTotals)
+  // Find the latest month with data
+  const sortedMonths = Array.from(allMonths).sort((a, b) => {
+    const [yearA, monthA] = a.split('-').map(Number);
+    const [yearB, monthB] = b.split('-').map(Number);
+    return yearB * 12 + monthB - (yearA * 12 + monthA);
+  });
+  
+  if (sortedMonths.length === 0) {
+    // No data found, return sample data
+    return {
+      success: true,
+      chart_data: generateSampleData(days, monthOffset),
+      user_configs: generateSampleUsers(topUsers)
+    };
+  }
+  
+  // Select target month based on offset
+  const targetMonthStr = sortedMonths[Math.min(monthOffset, sortedMonths.length - 1)];
+  const [targetYear, targetMonth] = targetMonthStr.split('-').map(Number);
+  
+  // Get user totals for the selected month
+  const monthUserTotals = userTotals[targetMonthStr] || {};
+  const monthDailyHours = dailyHours[targetMonthStr] || {};
+  
+  // Sort users by total hours for the selected month
+  const sortedUsers = Object.entries(monthUserTotals)
     .sort((a, b) => b[1] - a[1])
     .slice(0, topUsers)
     .map(([user]) => user);
   
   // Generate chart data
   const chartData = [];
-  const endDay = monthOffset === 0 ? Math.min(now.getDate(), days) : days;
+  
+  // Determine the last day of the month
+  const lastDayOfMonth = new Date(targetYear, targetMonth, 0).getDate();
+  const endDay = Math.min(lastDayOfMonth, days);
   
   for (let day = 1; day <= endDay; day++) {
     const dayKey = `${String(targetMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
     const dayData = { date: dayKey };
     
     sortedUsers.forEach(user => {
-      const hours = dailyHours[user]?.[dayKey] || 0;
+      const userDailyData = monthDailyHours[user] || {};
+      const hours = userDailyData[dayKey] || 0;
       if (hours > 0) {
         dayData[user] = Math.round(hours * 10) / 10;
       }
