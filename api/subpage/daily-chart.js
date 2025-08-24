@@ -210,10 +210,12 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
         if (session.status === '開始' || session.status === 's') {
           startTime = parseTimeToMinutes(session.time);
         } else if ((session.status === '終了' || session.status === 'f') && startTime !== null) {
-          const endTime = parseTimeToMinutes(session.time);
-          if (endTime > startTime) {
-            totalMinutes += endTime - startTime;
+          let endTime = parseTimeToMinutes(session.time);
+          // Handle overnight work (if end time is less than start time, assume next day)
+          if (endTime < startTime) {
+            endTime += 24 * 60; // Add 24 hours
           }
+          totalMinutes += endTime - startTime;
           startTime = null;
         }
       });
@@ -255,7 +257,7 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
     };
   }
   
-  // Select target month based on offset
+  // Select target month based on offset (0 = latest month, 1 = previous month, etc.)
   const targetMonthStr = sortedMonths[Math.min(monthOffset, sortedMonths.length - 1)];
   const [targetYear, targetMonth] = targetMonthStr.split('-').map(Number);
   
@@ -335,6 +337,9 @@ function parseWorkTime(timeStr) {
 
 function parseTimeToMinutes(timeStr) {
   if (!timeStr) return 0;
+  
+  // Remove any extra spaces
+  timeStr = timeStr.trim();
   
   // Handle "14:30" format
   if (timeStr.includes(':')) {
