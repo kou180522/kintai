@@ -132,14 +132,16 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
   const dailyHours = {};
   const userTotals = {};
   const allMonths = new Set();
+  const userSessions = {}; // Track start/end sessions per user per day
   
-  // First pass: collect all available months and data
+  // First, organize records by user and date
   records.forEach(row => {
     if (!row['日付'] || !row['ユーザー']) return;
     
     const dateStr = row['日付'];
     const user = row['ユーザー'];
     const status = row['ステータス'] || '';
+    const timeStr = row['時間'] || '';
     const workTime = row['合計稼働時間'] || '';
     
     // Parse date
@@ -153,11 +155,74 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
     if (isNaN(year) || isNaN(month) || isNaN(day)) return;
     
     allMonths.add(`${year}-${month}`);
+    const monthKey = `${year}-${month}`;
+    const dayKey = `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+    const fullDateKey = `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
     
-    // Process work time for end status
+    // Initialize session tracking
+    if (!userSessions[user]) userSessions[user] = {};
+    if (!userSessions[user][fullDateKey]) userSessions[user][fullDateKey] = [];
+    
+    // If work time is already calculated, use it
     if (status === '終了' && workTime) {
       const hours = parseWorkTime(workTime);
       if (hours > 0) {
+        if (!dailyHours[monthKey]) dailyHours[monthKey] = {};
+        if (!dailyHours[monthKey][user]) dailyHours[monthKey][user] = {};
+        if (!dailyHours[monthKey][user][dayKey]) dailyHours[monthKey][user][dayKey] = 0;
+        
+        dailyHours[monthKey][user][dayKey] += hours;
+        
+        if (!userTotals[monthKey]) userTotals[monthKey] = {};
+        if (!userTotals[monthKey][user]) userTotals[monthKey][user] = 0;
+        userTotals[monthKey][user] += hours;
+      }
+    } else if (timeStr) {
+      // Store session times for later calculation
+      userSessions[user][fullDateKey].push({
+        time: timeStr,
+        status: status,
+        year: year,
+        month: month,
+        day: day
+      });
+    }
+  });
+  
+  // Calculate work hours from start/end sessions
+  Object.keys(userSessions).forEach(user => {
+    Object.keys(userSessions[user]).forEach(dateKey => {
+      const sessions = userSessions[user][dateKey];
+      if (sessions.length === 0) return;
+      
+      // Sort sessions by time
+      sessions.sort((a, b) => {
+        const timeA = parseTimeToMinutes(a.time);
+        const timeB = parseTimeToMinutes(b.time);
+        return timeA - timeB;
+      });
+      
+      // Calculate work hours for this day
+      let startTime = null;
+      let totalMinutes = 0;
+      
+      sessions.forEach(session => {
+        if (session.status === '開始' || session.status === 's') {
+          startTime = parseTimeToMinutes(session.time);
+        } else if ((session.status === '終了' || session.status === 'f') && startTime !== null) {
+          const endTime = parseTimeToMinutes(session.time);
+          if (endTime > startTime) {
+            totalMinutes += endTime - startTime;
+          }
+          startTime = null;
+        }
+      });
+      
+      if (totalMinutes > 0) {
+        const hours = totalMinutes / 60;
+        const year = sessions[0].year;
+        const month = sessions[0].month;
+        const day = sessions[0].day;
         const monthKey = `${year}-${month}`;
         const dayKey = `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
         
@@ -171,7 +236,7 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
         if (!userTotals[monthKey][user]) userTotals[monthKey][user] = 0;
         userTotals[monthKey][user] += hours;
       }
-    }
+    });
   });
   
   // Find the latest month with data
@@ -266,4 +331,22 @@ function parseWorkTime(timeStr) {
   // Try parsing as number
   const num = parseFloat(timeStr);
   return isNaN(num) ? 0 : num;
+}
+
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  
+  // Handle "14:30" format
+  if (timeStr.includes(':')) {
+    const parts = timeStr.split(':');
+    if (parts.length >= 2) {
+      const hours = parseInt(parts[0]) || 0;
+      const minutes = parseInt(parts[1]) || 0;
+      return hours * 60 + minutes;
+    }
+  }
+  
+  // If it's just a number, assume it's hours
+  const num = parseFloat(timeStr);
+  return isNaN(num) ? 0 : num * 60;
 }
