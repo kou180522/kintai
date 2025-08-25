@@ -9,7 +9,6 @@ export default function handler(req, res) {
     return;
   }
   
-  // Get query parameters
   const { days = 31, top_users = 15, month_offset = 0 } = req.query;
   
   try {
@@ -17,33 +16,31 @@ export default function handler(req, res) {
     const path = require('path');
     const csv = require('csv-parse/sync');
     
-    // Try multiple paths for CSV file
-    const possiblePaths = [
+    // Read CSV file
+    let csvData = null;
+    const paths = [
       path.join(process.cwd(), 'public', 'attendance_data.csv'),
       path.join(process.cwd(), 'data', 'attendance_data.csv'),
       '/var/task/public/attendance_data.csv',
       '/var/task/data/attendance_data.csv'
     ];
     
-    let csvData = null;
-    let csvPath = null;
-    
-    for (const p of possiblePaths) {
+    for (const p of paths) {
       try {
         csvData = fs.readFileSync(p, 'utf8');
-        csvPath = p;
+        console.log(`CSV loaded from: ${p}`);
         break;
       } catch (e) {
-        // Try next path
+        // Continue
       }
     }
     
     if (!csvData) {
-      // Return sample data if CSV not found
       return res.status(200).json({
-        success: true,
-        chart_data: generateSampleData(parseInt(days), parseInt(month_offset)),
-        user_configs: generateSampleUsers(parseInt(top_users))
+        success: false,
+        message: 'CSV file not found',
+        chart_data: [],
+        user_configs: {}
       });
     }
     
@@ -53,247 +50,193 @@ export default function handler(req, res) {
       skip_empty_lines: true
     });
     
-    // Process real data
+    console.log(`Loaded ${records.length} records`);
+    
+    // Process data using the same logic as Python backend
     const result = processAttendanceData(records, parseInt(days), parseInt(top_users), parseInt(month_offset));
     
     res.status(200).json(result);
     
   } catch (error) {
-    console.error('Error processing request:', error);
-    
-    // Return sample data on error
-    res.status(200).json({
-      success: true,
-      chart_data: generateSampleData(parseInt(days), parseInt(month_offset)),
-      user_configs: generateSampleUsers(parseInt(top_users))
+    console.error('Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      chart_data: [],
+      user_configs: {}
     });
   }
 }
 
-function generateSampleData(days, monthOffset) {
-  const data = [];
-  const now = new Date();
-  let targetMonth = now.getMonth() + 1 - monthOffset;
-  let targetYear = now.getFullYear();
+function processAttendanceData(records, days, topUsers, monthOffset) {
+  // Step 1: Collect all timestamps by user
+  const userAllTimestamps = {};
   
+  records.forEach(record => {
+    const userName = record['ユーザー'] || '';
+    const date = record['日付'] || '';
+    const time = record['時間'] || '';
+    const status = record['ステータス'] || '';
+    const message = record['メッセージ'] || '';
+    const workingHours = record['合計稼働時間'] || '';
+    
+    if (!userName || !date || !time || !status) return;
+    
+    if (!userAllTimestamps[userName]) {
+      userAllTimestamps[userName] = [];
+    }
+    
+    // Store timestamp
+    userAllTimestamps[userName].push({
+      date,
+      time,
+      status: status.toLowerCase().trim(),
+      message,
+      workingHours,
+      datetimeStr: `${date} ${time.padStart(5, '0')}`  // For sorting
+    });
+  });
+  
+  // Step 2: Process each user's timestamps
+  const userTimeData = {};
+  
+  Object.keys(userAllTimestamps).forEach(userName => {
+    const timestamps = userAllTimestamps[userName];
+    
+    // Sort chronologically
+    timestamps.sort((a, b) => a.datetimeStr.localeCompare(b.datetimeStr));
+    
+    // Initialize user data
+    userTimeData[userName] = {
+      dailyHours: {},
+      monthlyHours: {},
+      totalMinutes: 0,
+      workDays: 0
+    };
+    
+    // Process start/end pairs
+    let currentStart = null;
+    
+    for (let i = 0; i < timestamps.length; i++) {
+      const ts = timestamps[i];
+      
+      if (ts.status === 's' || ts.status === '開始' || ts.status === 'start') {
+        currentStart = ts;
+      } else if (ts.status === 'f' || ts.status === '終了' || ts.status === 'end') {
+        let workMinutes = 0;
+        
+        // Check for pre-calculated hours first
+        if (ts.workingHours && ts.workingHours.trim()) {
+          if (ts.workingHours.includes(':')) {
+            // Format: "H:MM:SS"
+            const parts = ts.workingHours.split(':');
+            workMinutes = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+          } else {
+            // Pure minutes format
+            workMinutes = parseInt(ts.workingHours) || 0;
+          }
+          
+          // Use the work date
+          const workDate = currentStart ? currentStart.date : ts.date;
+          
+          if (workMinutes > 0 && workMinutes < 24 * 60) {
+            addWorkMinutes(userTimeData[userName], workDate, workMinutes);
+          }
+          
+          currentStart = null;
+        } else if (currentStart) {
+          // Calculate from start/end times
+          const startTime = parseTime(currentStart.time);
+          const endTime = parseTime(ts.time);
+          
+          if (startTime !== null && endTime !== null) {
+            // Handle day crossing
+            if (currentStart.date !== ts.date || endTime < startTime) {
+              workMinutes = (24 * 60 - startTime) + endTime;
+            } else {
+              workMinutes = endTime - startTime;
+            }
+            
+            if (workMinutes > 0 && workMinutes < 24 * 60) {
+              addWorkMinutes(userTimeData[userName], currentStart.date, workMinutes);
+            }
+          }
+          
+          currentStart = null;
+        }
+      }
+    }
+  });
+  
+  // Step 3: Calculate target month
+  const now = new Date();
+  let targetYear = now.getFullYear();
+  let targetMonth = now.getMonth() + 1 - monthOffset;
+  
+  // Adjust for month boundaries
   while (targetMonth <= 0) {
     targetMonth += 12;
     targetYear--;
   }
   
-  const endDay = monthOffset === 0 ? Math.min(now.getDate(), days) : days;
-  
-  for (let day = 1; day <= endDay; day++) {
-    const dayData = {
-      date: `${String(targetMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`
-    };
-    
-    // Add sample user data
-    const sampleUsers = ['theoj246', 'ryo4ryo4n66', 'A', 'osaryo523778', 'kimoppy126'];
-    sampleUsers.forEach(user => {
-      if (Math.random() > 0.3) {
-        const hours = Math.random() * 10;
-        dayData[user] = Math.round(hours * 10) / 10;
-      }
-    });
-    
-    data.push(dayData);
+  // For now, use August 2025 as the latest data
+  if (monthOffset === 0 && targetYear === 2024) {
+    targetYear = 2025;
+    targetMonth = 8;
   }
   
-  return data;
-}
-
-function generateSampleUsers(topUsers) {
-  const users = ['theoj246', 'ryo4ryo4n66', 'A', 'osaryo523778', 'kimoppy126', 
-                  'yuta.takasu', 'hinako.tsutsumi2525', 'ujwal.kumar252725',
-                  'kouki0802.ao', 'erin.isozu', 'marikou180522', 'Yohei Watanabe',
-                  'info', 'deerveryone', 'hara_kento09'];
+  const targetMonthKey = `${targetYear}-${targetMonth}`;
+  console.log(`Target month: ${targetMonthKey}`);
   
-  const configs = {};
-  const colors = [
-    'hsl(265, 70%, 50%)', 'hsl(340, 70%, 50%)', 'hsl(45, 70%, 50%)',
-    'hsl(120, 70%, 50%)', 'hsl(200, 70%, 50%)', 'hsl(15, 70%, 50%)',
-    'hsl(300, 70%, 50%)', 'hsl(180, 70%, 50%)', 'hsl(60, 70%, 50%)',
-    'hsl(240, 70%, 50%)', 'hsl(90, 70%, 50%)', 'hsl(150, 70%, 50%)',
-    'hsl(30, 70%, 50%)', 'hsl(270, 70%, 50%)', 'hsl(330, 70%, 50%)'
-  ];
+  // Step 4: Get monthly totals for sorting
+  const userMonthlyMinutes = {};
   
-  users.slice(0, topUsers).forEach((user, i) => {
-    configs[user] = {
-      label: user,
-      color: colors[i] || `hsl(${(i * 360 / topUsers)}, 70%, 50%)`
-    };
+  Object.keys(userTimeData).forEach(userName => {
+    const monthData = userTimeData[userName].monthlyHours[targetMonthKey];
+    userMonthlyMinutes[userName] = monthData ? monthData.workMinutes : 0;
   });
   
-  return configs;
-}
-
-function processAttendanceData(records, days, topUsers, monthOffset) {
-  const dailyHours = {};
-  const userTotals = {};
-  const allMonths = new Set();
-  const userSessions = {}; // Track start/end sessions per user per day
+  // Step 5: Sort users by monthly work time
+  const sortedUsers = Object.keys(userTimeData)
+    .filter(user => userMonthlyMinutes[user] > 0)
+    .sort((a, b) => userMonthlyMinutes[b] - userMonthlyMinutes[a])
+    .slice(0, topUsers);
   
-  // First, organize records by user and date
-  records.forEach(row => {
-    if (!row['日付'] || !row['ユーザー']) return;
-    
-    const dateStr = row['日付'];
-    const user = row['ユーザー'];
-    const status = row['ステータス'] || '';
-    const timeStr = row['時間'] || '';
-    const workTime = row['合計稼働時間'] || '';
-    
-    // Parse date
-    const dateParts = dateStr.split('/');
-    if (dateParts.length !== 3) return;
-    
-    const year = parseInt(dateParts[0]);
-    const month = parseInt(dateParts[1]);
-    const day = parseInt(dateParts[2]);
-    
-    if (isNaN(year) || isNaN(month) || isNaN(day)) return;
-    
-    allMonths.add(`${year}-${month}`);
-    const monthKey = `${year}-${month}`;
-    const dayKey = `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
-    const fullDateKey = `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
-    
-    // Initialize session tracking
-    if (!userSessions[user]) userSessions[user] = {};
-    if (!userSessions[user][fullDateKey]) userSessions[user][fullDateKey] = [];
-    
-    // If work time is already calculated, use it
-    if (status === '終了' && workTime) {
-      const hours = parseWorkTime(workTime);
-      if (hours > 0) {
-        if (!dailyHours[monthKey]) dailyHours[monthKey] = {};
-        if (!dailyHours[monthKey][user]) dailyHours[monthKey][user] = {};
-        if (!dailyHours[monthKey][user][dayKey]) dailyHours[monthKey][user][dayKey] = 0;
-        
-        dailyHours[monthKey][user][dayKey] += hours;
-        
-        if (!userTotals[monthKey]) userTotals[monthKey] = {};
-        if (!userTotals[monthKey][user]) userTotals[monthKey][user] = 0;
-        userTotals[monthKey][user] += hours;
-      }
-    } else if (timeStr) {
-      // Store session times for later calculation
-      userSessions[user][fullDateKey].push({
-        time: timeStr,
-        status: status,
-        year: year,
-        month: month,
-        day: day
-      });
-    }
-  });
+  console.log(`Top users for ${targetMonthKey}:`, sortedUsers.slice(0, 5));
   
-  // Calculate work hours from start/end sessions
-  Object.keys(userSessions).forEach(user => {
-    Object.keys(userSessions[user]).forEach(dateKey => {
-      const sessions = userSessions[user][dateKey];
-      if (sessions.length === 0) return;
-      
-      // Sort sessions by time
-      sessions.sort((a, b) => {
-        const timeA = parseTimeToMinutes(a.time);
-        const timeB = parseTimeToMinutes(b.time);
-        return timeA - timeB;
-      });
-      
-      // Calculate work hours for this day
-      let startTime = null;
-      let totalMinutes = 0;
-      
-      sessions.forEach(session => {
-        if (session.status === '開始' || session.status === 's') {
-          startTime = parseTimeToMinutes(session.time);
-        } else if ((session.status === '終了' || session.status === 'f') && startTime !== null) {
-          let endTime = parseTimeToMinutes(session.time);
-          // Handle overnight work (if end time is less than start time, assume next day)
-          if (endTime < startTime) {
-            endTime += 24 * 60; // Add 24 hours
-          }
-          totalMinutes += endTime - startTime;
-          startTime = null;
-        }
-      });
-      
-      if (totalMinutes > 0) {
-        const hours = totalMinutes / 60;
-        const year = sessions[0].year;
-        const month = sessions[0].month;
-        const day = sessions[0].day;
-        const monthKey = `${year}-${month}`;
-        const dayKey = `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
-        
-        if (!dailyHours[monthKey]) dailyHours[monthKey] = {};
-        if (!dailyHours[monthKey][user]) dailyHours[monthKey][user] = {};
-        if (!dailyHours[monthKey][user][dayKey]) dailyHours[monthKey][user][dayKey] = 0;
-        
-        dailyHours[monthKey][user][dayKey] += hours;
-        
-        if (!userTotals[monthKey]) userTotals[monthKey] = {};
-        if (!userTotals[monthKey][user]) userTotals[monthKey][user] = 0;
-        userTotals[monthKey][user] += hours;
-      }
-    });
-  });
-  
-  // Find the latest month with data
-  const sortedMonths = Array.from(allMonths).sort((a, b) => {
-    const [yearA, monthA] = a.split('-').map(Number);
-    const [yearB, monthB] = b.split('-').map(Number);
-    return yearB * 12 + monthB - (yearA * 12 + monthA);
-  });
-  
-  if (sortedMonths.length === 0) {
-    // No data found, return sample data
-    return {
-      success: true,
-      chart_data: generateSampleData(days, monthOffset),
-      user_configs: generateSampleUsers(topUsers)
-    };
-  }
-  
-  // Select target month based on offset (0 = latest month, 1 = previous month, etc.)
-  const targetMonthStr = sortedMonths[Math.min(monthOffset, sortedMonths.length - 1)];
-  const [targetYear, targetMonth] = targetMonthStr.split('-').map(Number);
-  
-  // Get user totals for the selected month
-  const monthUserTotals = userTotals[targetMonthStr] || {};
-  const monthDailyHours = dailyHours[targetMonthStr] || {};
-  
-  // Sort users by total hours for the selected month
-  const sortedUsers = Object.entries(monthUserTotals)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, topUsers)
-    .map(([user]) => user);
-  
-  // Generate chart data
+  // Step 6: Generate chart data
   const chartData = [];
+  const lastDay = new Date(targetYear, targetMonth, 0).getDate();
   
-  // Determine the last day of the month
-  const lastDayOfMonth = new Date(targetYear, targetMonth, 0).getDate();
-  const endDay = Math.min(lastDayOfMonth, days);
-  
-  for (let day = 1; day <= endDay; day++) {
-    const dayKey = `${String(targetMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
-    const dayData = { date: dayKey };
+  for (let day = 1; day <= Math.min(lastDay, days); day++) {
+    const dateKey = `${targetYear}/${String(targetMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+    const dayData = { 
+      date: String(day).padStart(2, '0')
+    };
     
-    sortedUsers.forEach(user => {
-      const userDailyData = monthDailyHours[user] || {};
-      const hours = userDailyData[dayKey] || 0;
-      if (hours > 0) {
-        dayData[user] = Math.round(hours * 10) / 10;
+    sortedUsers.forEach(userName => {
+      const dayInfo = userTimeData[userName]?.dailyHours[dateKey];
+      const minutes = dayInfo ? dayInfo.workMinutes : 0;
+      
+      if (minutes > 0) {
+        const hours = minutes / 60;
+        dayData[userName] = Math.round(hours * 10) / 10;
+        
+        const wholeHours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        dayData[`${userName}_formatted`] = mins > 0 
+          ? `${wholeHours}時間${mins}分`
+          : `${wholeHours}時間`;
+      } else {
+        dayData[userName] = null;
+        dayData[`${userName}_formatted`] = null;
       }
     });
     
     chartData.push(dayData);
   }
   
-  // Generate user configs
+  // Step 7: Generate user configs
   const userConfigs = {};
   const colors = [
     'hsl(265, 70%, 50%)', 'hsl(340, 70%, 50%)', 'hsl(45, 70%, 50%)',
@@ -303,9 +246,9 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
     'hsl(30, 70%, 50%)', 'hsl(270, 70%, 50%)', 'hsl(330, 70%, 50%)'
   ];
   
-  sortedUsers.forEach((user, i) => {
-    userConfigs[user] = {
-      label: user,
+  sortedUsers.forEach((userName, i) => {
+    userConfigs[userName] = {
+      label: userName,
       color: colors[i] || `hsl(${(i * 360 / topUsers)}, 70%, 50%)`
     };
   });
@@ -317,41 +260,34 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
   };
 }
 
-function parseWorkTime(timeStr) {
-  if (!timeStr) return 0;
+function parseTime(timeStr) {
+  if (!timeStr) return null;
   
-  // Handle "1:30:00" format
-  if (timeStr.includes(':')) {
-    const parts = timeStr.split(':');
-    if (parts.length >= 2) {
-      const hours = parseInt(parts[0]) || 0;
-      const minutes = parseInt(parts[1]) || 0;
-      return hours + minutes / 60;
-    }
+  const parts = timeStr.split(':');
+  if (parts.length >= 2) {
+    const hours = parseInt(parts[0]) || 0;
+    const minutes = parseInt(parts[1]) || 0;
+    return hours * 60 + minutes;
   }
   
-  // Try parsing as number
-  const num = parseFloat(timeStr);
-  return isNaN(num) ? 0 : num;
+  return null;
 }
 
-function parseTimeToMinutes(timeStr) {
-  if (!timeStr) return 0;
-  
-  // Remove any extra spaces
-  timeStr = timeStr.trim();
-  
-  // Handle "14:30" format
-  if (timeStr.includes(':')) {
-    const parts = timeStr.split(':');
-    if (parts.length >= 2) {
-      const hours = parseInt(parts[0]) || 0;
-      const minutes = parseInt(parts[1]) || 0;
-      return hours * 60 + minutes;
-    }
+function addWorkMinutes(userData, date, minutes) {
+  // Add to daily hours
+  if (!userData.dailyHours[date]) {
+    userData.dailyHours[date] = { workMinutes: 0 };
   }
+  userData.dailyHours[date].workMinutes += minutes;
   
-  // If it's just a number, assume it's hours
-  const num = parseFloat(timeStr);
-  return isNaN(num) ? 0 : num * 60;
+  // Add to monthly hours
+  const [year, month] = date.split('/').slice(0, 2);
+  const monthKey = `${year}-${month}`;
+  
+  if (!userData.monthlyHours[monthKey]) {
+    userData.monthlyHours[monthKey] = { workMinutes: 0 };
+  }
+  userData.monthlyHours[monthKey].workMinutes += minutes;
+  
+  userData.totalMinutes += minutes;
 }

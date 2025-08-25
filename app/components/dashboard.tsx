@@ -62,19 +62,21 @@ export function Dashboard() {
     try {
       const data = await fetchApi(`/api/subpage/daily-chart?days=31&top_users=15&month_offset=${monthOffset}`)
       
+      console.log('Chart data received:', data)
+      
       if (data.success) {
-          setChartData(data.chart_data)
-          setChartConfig(data.user_configs)
+          setChartData(data.chart_data || [])
+          setChartConfig(data.user_configs || {})
           // トップユーザーのリストを取得
-          setTopUsers(Object.keys(data.user_configs))
+          setTopUsers(Object.keys(data.user_configs || {}))
           setLastUpdateTime(new Date())
           
           // 各ユーザーの表示中の月の合計時間を計算
           const monthlyTotals: {[key: string]: {hours: number, minutes: number}} = {}
           
-          Object.keys(data.user_configs).forEach(userName => {
+          Object.keys(data.user_configs || {}).forEach(userName => {
             let totalHours = 0
-            data.chart_data.forEach((day: any) => {
+            ;(data.chart_data || []).forEach((day: any) => {
               // 全データを集計（すでに月でフィルタされている）
               if (day[userName] !== null && day[userName] !== undefined) {
                 totalHours += day[userName]
@@ -85,9 +87,17 @@ export function Dashboard() {
             monthlyTotals[userName] = { hours, minutes }
           })
           setUserMonthlyTotal(monthlyTotals)
+      } else {
+          console.error('API returned success: false', data)
+          setChartData([])
+          setChartConfig({})
+          setTopUsers([])
       }
     } catch (error) {
       console.error('グラフデータ取得エラー:', error)
+      setChartData([])
+      setChartConfig({})
+      setTopUsers([])
     } finally {
       setIsChartLoading(false)
     }
