@@ -37,21 +37,36 @@ export default function handler(req, res) {
     // Process monthly data by user
     const userMonthlyData = {};
     
+    // Step 1: Collect all timestamps by user
+    const userAllTimestamps = {};
+    
     records.forEach(record => {
       const userName = record['ユーザー'] || '';
       const date = record['日付'] || '';
+      const time = record['時間'] || '';
       const status = record['ステータス'] || '';
-      const workHours = record['合計稼働時間'] || '';
+      const workingHours = record['合計稼働時間'] || '';
       
-      if (!userName || !date) return;
+      if (!userName || !date || !time || !status) return;
       
-      // Parse date
-      const [year, month] = date.split('/').slice(0, 2);
-      if (!year || !month) return;
+      if (!userAllTimestamps[userName]) {
+        userAllTimestamps[userName] = [];
+      }
       
-      const monthKey = `${year}/${String(month).padStart(2, '0')}`;
+      userAllTimestamps[userName].push({
+        date,
+        time,
+        status: status.toLowerCase().trim(),
+        workingHours,
+        datetimeStr: `${date} ${time.padStart(5, '0')}`
+      });
+    });
+    
+    // Step 2: Process each user's timestamps
+    Object.keys(userAllTimestamps).forEach(userName => {
+      const timestamps = userAllTimestamps[userName];
+      timestamps.sort((a, b) => a.datetimeStr.localeCompare(b.datetimeStr));
       
-      // Initialize user data
       if (!userMonthlyData[userName]) {
         userMonthlyData[userName] = {
           totalMinutes: 0,
@@ -59,27 +74,64 @@ export default function handler(req, res) {
         };
       }
       
-      // Initialize month data
-      if (!userMonthlyData[userName].monthlyMinutes[monthKey]) {
-        userMonthlyData[userName].monthlyMinutes[monthKey] = 0;
-      }
+      let currentStart = null;
       
-      // Process end records with work hours
-      if (status === 'f' && workHours) {
-        let minutes = 0;
+      for (let i = 0; i < timestamps.length; i++) {
+        const ts = timestamps[i];
         
-        if (workHours.includes(':')) {
-          const parts = workHours.split(':');
-          const hours = parseInt(parts[0]) || 0;
-          const mins = parseInt(parts[1]) || 0;
-          minutes = hours * 60 + mins;
-        } else {
-          minutes = parseInt(workHours) || 0;
-        }
-        
-        if (minutes > 0) {
-          userMonthlyData[userName].monthlyMinutes[monthKey] += minutes;
-          userMonthlyData[userName].totalMinutes += minutes;
+        if (ts.status === 's' || ts.status === '開始' || ts.status === 'start') {
+          currentStart = ts;
+        } else if (ts.status === 'f' || ts.status === '終了' || ts.status === 'end') {
+          let workMinutes = 0;
+          
+          // Check for pre-calculated hours first
+          if (ts.workingHours && ts.workingHours.trim()) {
+            if (ts.workingHours.includes(':')) {
+              const parts = ts.workingHours.split(':');
+              workMinutes = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+            } else {
+              workMinutes = parseInt(ts.workingHours) || 0;
+            }
+            
+            const workDate = currentStart ? currentStart.date : ts.date;
+            const [year, month] = workDate.split('/').slice(0, 2);
+            const monthKey = `${year}/${String(month).padStart(2, '0')}`;
+            
+            if (workMinutes > 0 && workMinutes < 24 * 60) {
+              if (!userMonthlyData[userName].monthlyMinutes[monthKey]) {
+                userMonthlyData[userName].monthlyMinutes[monthKey] = 0;
+              }
+              userMonthlyData[userName].monthlyMinutes[monthKey] += workMinutes;
+              userMonthlyData[userName].totalMinutes += workMinutes;
+            }
+            
+            currentStart = null;
+          } else if (currentStart) {
+            // Calculate from start/end times
+            const startTime = parseTime(currentStart.time);
+            const endTime = parseTime(ts.time);
+            
+            if (startTime !== null && endTime !== null) {
+              if (currentStart.date !== ts.date || endTime < startTime) {
+                workMinutes = (24 * 60 - startTime) + endTime;
+              } else {
+                workMinutes = endTime - startTime;
+              }
+              
+              const [year, month] = currentStart.date.split('/').slice(0, 2);
+              const monthKey = `${year}/${String(month).padStart(2, '0')}`;
+              
+              if (workMinutes > 0 && workMinutes < 24 * 60) {
+                if (!userMonthlyData[userName].monthlyMinutes[monthKey]) {
+                  userMonthlyData[userName].monthlyMinutes[monthKey] = 0;
+                }
+                userMonthlyData[userName].monthlyMinutes[monthKey] += workMinutes;
+                userMonthlyData[userName].totalMinutes += workMinutes;
+              }
+            }
+            
+            currentStart = null;
+          }
         }
       }
     });
@@ -163,4 +215,17 @@ export default function handler(req, res) {
       error: error.message
     });
   }
+}
+
+function parseTime(timeStr) {
+  if (!timeStr) return null;
+  
+  const parts = timeStr.split(':');
+  if (parts.length >= 2) {
+    const hours = parseInt(parts[0]) || 0;
+    const minutes = parseInt(parts[1]) || 0;
+    return hours * 60 + minutes;
+  }
+  
+  return null;
 }

@@ -282,7 +282,7 @@ function addWorkMinutes(userData, date, minutes) {
   
   // Add to monthly hours
   const [year, month] = date.split('/').slice(0, 2);
-  const monthKey = `${year}-${month}`;
+  const monthKey = `${year}-${parseInt(month)}`;  // Remove leading zero for consistency
   
   if (!userData.monthlyHours[monthKey]) {
     userData.monthlyHours[monthKey] = { workMinutes: 0 };
