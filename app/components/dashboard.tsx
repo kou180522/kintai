@@ -60,16 +60,18 @@ export function Dashboard() {
   const fetchChartData = async () => {
     setIsChartLoading(true)
     try {
-      // デバッグ: テスト用のシンプルなAPIを使用
-      const USE_TEST_API = false; // これをtrueにすると、テストデータを使用
+      // 月オフセットから年月を計算
+      const now = new Date()
+      let targetYear = now.getFullYear()
+      let targetMonth = now.getMonth() + 1 - monthOffset
       
-      let data;
-      if (USE_TEST_API) {
-        data = await fetchApi('/api/test/simple')
-        console.log('Using TEST data:', data)
-      } else {
-        data = await fetchApi(`/api/subpage/daily-chart?days=31&top_users=15&month_offset=${monthOffset}`)
+      // 月が1未満になったら前年に調整
+      while (targetMonth <= 0) {
+        targetMonth += 12
+        targetYear--
       }
+      
+      const data = await fetchApi(`/api/subpage/daily-chart?year=${targetYear}&month=${targetMonth}`)
       
       console.log('Chart data received:', data)
       console.log('Success:', data?.success)
@@ -450,8 +452,8 @@ export function Dashboard() {
                   {/* 月切り替えボタン */}
                   <div className="flex items-center gap-1 bg-white/80 dark:bg-gray-800/80 rounded-lg px-2">
                     <button
-                      onClick={() => setMonthOffset(Math.min(monthOffset + 1, 12))}
-                      disabled={monthOffset >= 12}
+                      onClick={() => setMonthOffset(Math.min(monthOffset + 1, 24))}
+                      disabled={monthOffset >= 24}
                       className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       title="前月"
                     >

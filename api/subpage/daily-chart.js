@@ -13,6 +13,12 @@ export default function handler(req, res) {
     return;
   }
   
+  // クエリパラメータから年月を取得（デフォルトは現在の月）
+  const { year, month } = req.query;
+  const now = new Date();
+  const targetYear = year ? parseInt(year) : now.getFullYear();
+  const targetMonth = month ? parseInt(month) : (now.getMonth() + 1);
+  
   try {
     // CSVファイルを読み込み
     const csvPath = path.join(process.cwd(), 'public', 'attendance_data.csv');
@@ -90,14 +96,14 @@ export default function handler(req, res) {
       }
     });
     
-    // 2025年8月のデータを抽出
-    const targetMonth = '2025/08';
+    // 指定された年月のデータを抽出
+    const targetMonthStr = `${targetYear}/${String(targetMonth).padStart(2, '0')}`;
     const monthlyTotals = {};
     
     Object.keys(userWorkData).forEach(userName => {
       monthlyTotals[userName] = 0;
       Object.keys(userWorkData[userName]).forEach(date => {
-        if (date.startsWith(targetMonth)) {
+        if (date.startsWith(targetMonthStr)) {
           monthlyTotals[userName] += userWorkData[userName][date];
         }
       });
@@ -112,9 +118,11 @@ export default function handler(req, res) {
     
     // グラフデータを生成
     const chartData = [];
-    for (let day = 1; day <= 31; day++) {
+    const lastDay = new Date(targetYear, targetMonth, 0).getDate(); // 月の最終日を取得
+    
+    for (let day = 1; day <= lastDay; day++) {
       const dayStr = String(day).padStart(2, '0');
-      const dateKey = `${targetMonth}/${dayStr}`;
+      const dateKey = `${targetMonthStr}/${dayStr}`;
       const dayData = { date: dayStr };
       
       topUsers.forEach(userName => {
@@ -158,8 +166,10 @@ export default function handler(req, res) {
       success: true,
       chart_data: chartData,
       user_configs: userConfigs,
-      period: '過去31日間',
-      timestamp: new Date().toISOString()
+      period: `${targetYear}年${targetMonth}月`,
+      timestamp: new Date().toISOString(),
+      year: targetYear,
+      month: targetMonth
     });
     
   } catch (error) {
