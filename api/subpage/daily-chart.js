@@ -171,47 +171,74 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
   // Step 3: Calculate target month
   const now = new Date();
   let targetYear = now.getFullYear();
-  let targetMonth = now.getMonth() + 1 - monthOffset;
+  let targetMonth = now.getMonth() + 1;
   
-  // Adjust for month boundaries
-  while (targetMonth <= 0) {
-    targetMonth += 12;
-    targetYear--;
+  // Apply month offset
+  if (monthOffset > 0) {
+    targetMonth -= monthOffset;
+    while (targetMonth <= 0) {
+      targetMonth += 12;
+      targetYear--;
+    }
   }
   
-  // For now, use August 2025 as the latest data
-  if (monthOffset === 0 && targetYear === 2024) {
-    targetYear = 2025;
-    targetMonth = 8;
-  }
+  // Current month string for filtering
+  const currentMonthStr = `${targetYear}/${String(targetMonth).padStart(2, '0')}`;
   
-  const targetMonthKey = `${targetYear}-${targetMonth}`;
-  console.log(`Target month: ${targetMonthKey}`);
-  
-  // Step 4: Get monthly totals for sorting
-  const userMonthlyMinutes = {};
+  // Step 4: Calculate monthly work minutes for current month
+  const userMonthlyWorkMinutes = {};
   
   Object.keys(userTimeData).forEach(userName => {
-    const monthData = userTimeData[userName].monthlyHours[targetMonthKey];
-    userMonthlyMinutes[userName] = monthData ? monthData.workMinutes : 0;
+    let totalMinutesThisMonth = 0;
+    
+    // Sum up work minutes for dates in current month
+    Object.keys(userTimeData[userName].dailyHours).forEach(dateStr => {
+      if (dateStr.startsWith(currentMonthStr)) {
+        totalMinutesThisMonth += userTimeData[userName].dailyHours[dateStr].workMinutes;
+      }
+    });
+    
+    userMonthlyWorkMinutes[userName] = totalMinutesThisMonth;
   });
   
-  // Step 5: Sort users by monthly work time
+  // Step 5: Sort users by monthly work time (matching Python backend logic)
   const sortedUsers = Object.keys(userTimeData)
-    .filter(user => userMonthlyMinutes[user] > 0)
-    .sort((a, b) => userMonthlyMinutes[b] - userMonthlyMinutes[a])
+    .filter(user => userMonthlyWorkMinutes[user] > 0)
+    .sort((a, b) => userMonthlyWorkMinutes[b] - userMonthlyWorkMinutes[a])
     .slice(0, topUsers);
   
-  console.log(`Top users for ${targetMonthKey}:`, sortedUsers.slice(0, 5));
+  console.log(`Top users for ${currentMonthStr}:`, sortedUsers.slice(0, 5));
   
-  // Step 6: Generate chart data
+  // Step 6: Generate date list
+  let startDate, endDate;
+  
+  if (monthOffset > 0 || days === 31) {
+    // Show full month
+    startDate = new Date(targetYear, targetMonth - 1, 1);
+    if (targetMonth === 12) {
+      endDate = new Date(targetYear, 11, 31);
+    } else {
+      endDate = new Date(targetYear, targetMonth, 0); // Last day of month
+    }
+  } else {
+    // Show last N days
+    endDate = now;
+    startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - days);
+  }
+  
+  // Step 7: Generate chart data
   const chartData = [];
-  const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+  const currentDate = new Date(startDate);
   
-  for (let day = 1; day <= Math.min(lastDay, days); day++) {
-    const dateKey = `${targetYear}/${String(targetMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+  while (currentDate <= endDate) {
+    const dateKey = `${currentDate.getFullYear()}/${String(currentDate.getMonth() + 1).padStart(2, '0')}/${String(currentDate.getDate()).padStart(2, '0')}`;
+    const displayDate = (days === 31 && startDate.getDate() === 1) 
+      ? String(currentDate.getDate()).padStart(2, '0')
+      : `${String(currentDate.getMonth() + 1).padStart(2, '0')}/${String(currentDate.getDate()).padStart(2, '0')}`;
+    
     const dayData = { 
-      date: String(day).padStart(2, '0')
+      date: displayDate
     };
     
     sortedUsers.forEach(userName => {
@@ -234,9 +261,10 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
     });
     
     chartData.push(dayData);
+    currentDate.setDate(currentDate.getDate() + 1);
   }
   
-  // Step 7: Generate user configs
+  // Step 8: Generate user configs with colors
   const userConfigs = {};
   const colors = [
     'hsl(265, 70%, 50%)', 'hsl(340, 70%, 50%)', 'hsl(45, 70%, 50%)',
@@ -247,16 +275,24 @@ function processAttendanceData(records, days, topUsers, monthOffset) {
   ];
   
   sortedUsers.forEach((userName, i) => {
+    const totalMinutes = userMonthlyWorkMinutes[userName];
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
     userConfigs[userName] = {
       label: userName,
-      color: colors[i] || `hsl(${(i * 360 / topUsers)}, 70%, 50%)`
+      color: colors[i] || `hsl(${(i * 360 / topUsers)}, 70%, 50%)`,
+      work_hours_this_month: minutes > 0 ? `${hours}h${minutes}m` : `${hours}h`,
+      work_minutes_this_month: totalMinutes
     };
   });
   
   return {
     success: true,
     chart_data: chartData,
-    user_configs: userConfigs
+    user_configs: userConfigs,
+    period: days === 31 ? `${targetYear}年${targetMonth}月` : `過去${days}日間`,
+    timestamp: new Date().toISOString()
   };
 }
 
