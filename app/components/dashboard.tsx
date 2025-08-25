@@ -60,12 +60,24 @@ export function Dashboard() {
   const fetchChartData = async () => {
     setIsChartLoading(true)
     try {
+      // デバッグ: まずテストAPIを呼んでみる
+      if (import.meta.env.PROD) {
+        try {
+          const debugData = await fetchApi('/api/test/debug-api')
+          console.log('Debug API response:', debugData)
+        } catch (e) {
+          console.error('Debug API error:', e)
+        }
+      }
+      
       const data = await fetchApi(`/api/subpage/daily-chart?days=31&top_users=15&month_offset=${monthOffset}`)
       
       console.log('Chart data received:', data)
+      console.log('Chart data length:', data.chart_data?.length)
+      console.log('User configs:', data.user_configs)
       
-      if (data.success) {
-          setChartData(data.chart_data || [])
+      if (data.success && data.chart_data && data.chart_data.length > 0) {
+          setChartData(data.chart_data)
           setChartConfig(data.user_configs || {})
           // トップユーザーのリストを取得
           setTopUsers(Object.keys(data.user_configs || {}))
@@ -88,7 +100,7 @@ export function Dashboard() {
           })
           setUserMonthlyTotal(monthlyTotals)
       } else {
-          console.error('API returned success: false', data)
+          console.error('API returned empty or invalid data:', data)
           setChartData([])
           setChartConfig({})
           setTopUsers([])
