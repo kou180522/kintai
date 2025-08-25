@@ -60,35 +60,43 @@ export function Dashboard() {
   const fetchChartData = async () => {
     setIsChartLoading(true)
     try {
-      // デバッグ: まずテストAPIを呼んでみる
-      if (import.meta.env.PROD) {
-        try {
-          const debugData = await fetchApi('/api/test/debug-api')
-          console.log('Debug API response:', debugData)
-        } catch (e) {
-          console.error('Debug API error:', e)
-        }
+      // デバッグ: テスト用のシンプルなAPIを使用
+      const USE_TEST_API = true; // これをtrueにすると、テストデータを使用
+      
+      let data;
+      if (USE_TEST_API) {
+        data = await fetchApi('/api/test/simple')
+        console.log('Using TEST data:', data)
+      } else {
+        data = await fetchApi(`/api/subpage/daily-chart?days=31&top_users=15&month_offset=${monthOffset}`)
       }
       
-      const data = await fetchApi(`/api/subpage/daily-chart?days=31&top_users=15&month_offset=${monthOffset}`)
-      
       console.log('Chart data received:', data)
-      console.log('Chart data length:', data.chart_data?.length)
-      console.log('User configs:', data.user_configs)
+      console.log('Success:', data?.success)
+      console.log('Chart data exists:', !!data?.chart_data)
+      console.log('Chart data length:', data?.chart_data?.length)
+      console.log('User configs:', data?.user_configs)
+      console.log('First data point:', data?.chart_data?.[0])
       
-      if (data.success && data.chart_data && data.chart_data.length > 0) {
-          setChartData(data.chart_data)
-          setChartConfig(data.user_configs || {})
+      if (data && data.success === true) {
+          const chartData = data.chart_data || []
+          const userConfigs = data.user_configs || {}
+          
+          console.log('Setting chart data:', chartData)
+          console.log('Setting user configs:', userConfigs)
+          
+          setChartData(chartData)
+          setChartConfig(userConfigs)
           // トップユーザーのリストを取得
-          setTopUsers(Object.keys(data.user_configs || {}))
+          setTopUsers(Object.keys(userConfigs))
           setLastUpdateTime(new Date())
           
           // 各ユーザーの表示中の月の合計時間を計算
           const monthlyTotals: {[key: string]: {hours: number, minutes: number}} = {}
           
-          Object.keys(data.user_configs || {}).forEach(userName => {
+          Object.keys(userConfigs).forEach(userName => {
             let totalHours = 0
-            ;(data.chart_data || []).forEach((day: any) => {
+            chartData.forEach((day: any) => {
               // 全データを集計（すでに月でフィルタされている）
               if (day[userName] !== null && day[userName] !== undefined) {
                 totalHours += day[userName]
@@ -100,7 +108,7 @@ export function Dashboard() {
           })
           setUserMonthlyTotal(monthlyTotals)
       } else {
-          console.error('API returned empty or invalid data:', data)
+          console.error('API returned invalid data or success=false:', data)
           setChartData([])
           setChartConfig({})
           setTopUsers([])
