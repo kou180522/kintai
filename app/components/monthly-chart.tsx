@@ -14,7 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "~/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from "recharts"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from "recharts"
 
 export function MonthlyChart() {
   const [chartData, setChartData] = useState<any[]>([])
@@ -106,68 +106,74 @@ export function MonthlyChart() {
         {chartData.length > 0 ? (
           <div className="h-[400px] w-full">
             <ChartContainer config={chartConfig}>
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 40, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
-                <XAxis 
-                  dataKey="month" 
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  interval={0}
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(value) => {
-                    const [year, month] = value.split('-')
-                    return `${year}年${parseInt(month)}月`
-                  }}
-                />
-                <YAxis 
-                  label={{ value: '時間', angle: -90, position: 'insideLeft' }}
-                  tick={{ fontSize: 11 }}
-                />
-                <ChartTooltip 
-                  content={
-                    <ChartTooltipContent 
-                      labelFormatter={(value) => {
-                        const [year, month] = value.split('-')
-                        return `${year}年${parseInt(month)}月`
-                      }}
-                      formatter={(value, name) => {
-                        const config = chartConfig[name as string]
-                        const formatted = chartData.find(d => d.month === value)?.[`${name}_formatted`]
-                        return (
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: config?.color }}
-                            />
-                            <span className="font-medium">{config?.label || name}:</span>
-                            <span>{formatted || `${value}時間`}</span>
-                          </div>
-                        )
-                      }}
-                    />
-                  }
-                />
-                <Legend 
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  iconType="circle"
-                  formatter={(value) => {
-                    const config = chartConfig[value]
-                    return config?.label || value
-                  }}
-                />
-                
-                {/* 各ユーザーのバーを積み上げ表示 */}
-                {topUsers.map((userName, index) => (
-                  <Bar
-                    key={userName}
-                    dataKey={userName}
-                    stackId="a"
-                    fill={chartConfig[userName]?.color || `hsl(${index * 24}, 70%, 50%)`}
-                    name={userName}
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 40, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+                  <XAxis 
+                    dataKey="month" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    interval={0}
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(value) => {
+                      const [year, month] = value.split('-')
+                      return `${year}年${parseInt(month)}月`
+                    }}
                   />
-                ))}
-              </BarChart>
+                  <YAxis 
+                    label={{ value: '時間', angle: -90, position: 'insideLeft' }}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <ChartTooltip 
+                    content={
+                      <ChartTooltipContent 
+                        labelFormatter={(value) => {
+                          const [year, month] = value.split('-')
+                          return `${year}年${parseInt(month)}月`
+                        }}
+                        formatter={(value, name) => {
+                          const config = chartConfig[name as string]
+                          const formatted = chartData.find(d => d.month === value)?.[`${name}_formatted`]
+                          return (
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: config?.color }}
+                              />
+                              <span className="font-medium">{config?.label || name}:</span>
+                              <span>{formatted || `${value}時間`}</span>
+                            </div>
+                          )
+                        }}
+                      />
+                    }
+                  />
+                  <Legend 
+                    wrapperStyle={{ paddingTop: '20px' }}
+                    iconType="circle"
+                    formatter={(value) => {
+                      const config = chartConfig[value]
+                      return config?.label || value
+                    }}
+                  />
+                  
+                  {/* 各ユーザーの折れ線を表示 */}
+                  {topUsers.map((userName, index) => (
+                    <Line
+                      key={userName}
+                      type="monotone"
+                      dataKey={userName}
+                      stroke={chartConfig[userName]?.color || `hsl(${index * 24}, 70%, 50%)`}
+                      strokeWidth={2}
+                      dot={{ r: 4, fill: chartConfig[userName]?.color || `hsl(${index * 24}, 70%, 50%)` }}
+                      activeDot={{ r: 6 }}
+                      connectNulls={false}
+                      name={userName}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </div>
         ) : (
