@@ -4,13 +4,8 @@
  */
 
 export function getApiUrl(): string {
-  // 開発環境
-  if (import.meta.env.DEV) {
-    return 'http://localhost:8001';
-  }
-  
-  // 本番環境では同じドメインの/apiパスを使用
-  // Vercel Functionsが/apiで自動的にルーティングされる
+  // 本番環境とローカル環境の両方でVercel Functionsを使用
+  // React Router v7はローカルでもAPIルートを処理可能
   return '';
 }
 
