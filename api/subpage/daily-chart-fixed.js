@@ -125,9 +125,8 @@ export default function handler(req, res) {
     let targetYear = now.getFullYear();
     let targetMonth = now.getMonth() + 1;
     
-    const offset = parseInt(month_offset) || 0;
-    if (offset > 0) {
-      targetMonth -= offset;
+    if (monthOffset > 0) {
+      targetMonth -= monthOffset;
       while (targetMonth <= 0) {
         targetMonth += 12;
         targetYear--;

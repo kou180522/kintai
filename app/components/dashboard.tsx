@@ -61,7 +61,7 @@ export function Dashboard() {
     setIsChartLoading(true)
     try {
       // デバッグ: テスト用のシンプルなAPIを使用
-      const USE_TEST_API = true; // これをtrueにすると、テストデータを使用
+      const USE_TEST_API = false; // これをtrueにすると、テストデータを使用
       
       let data;
       if (USE_TEST_API) {
