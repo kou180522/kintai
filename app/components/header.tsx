@@ -5,6 +5,7 @@ export function Header() {
   const location = useLocation();
   const isOnHistoryPage = location.pathname === "/history";
   const isOnGuidelinePage = location.pathname === "/guidelines";
+  const isOnAnalyticsPage = location.pathname === "/analytics";
   
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-colors duration-700 ease-in-out relative z-50">
@@ -28,6 +29,27 @@ export function Header() {
         
         {/* 右側のボタン */}
         <div className="flex-1 flex justify-end gap-3">
+          {/* 分析ボタン */}
+          <Link
+            to="/analytics"
+            className="relative group z-10"
+          >
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-purple-400 dark:to-pink-400 rounded-lg opacity-100 blur-[1px] transition-all duration-300 group-hover:blur-[2px]"></div>
+            <div className="relative z-10 flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border-0">
+              <span className="text-sm font-medium text-purple-600 dark:text-purple-400 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition duration-200">
+                分析
+              </span>
+              <svg 
+                className="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-all duration-300" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </Link>
+          
           {/* ガイドラインボタン */}
           <Link
             to="/guidelines"
