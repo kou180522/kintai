@@ -15,6 +15,7 @@ import {
   ChartTooltipContent,
 } from "~/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Label, BarChart, Bar } from "recharts";
+import { MonthlyChart } from "~/components/monthly-chart";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -130,12 +131,17 @@ export default function Page2() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500 ease-in-out">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500 ease-in-out">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(120,119,198,0.3),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_80%,rgba(100,100,120,0.3),transparent_50%)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(120,119,198,0.3),transparent_50%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(100,100,120,0.3),transparent_50%)]"></div>
       </div>
-      <div className="w-full max-w-6xl mx-auto px-4 py-1 relative z-10 h-[calc(100vh-64px)]">
+      <div className="w-full max-w-6xl mx-auto px-4 py-8 relative z-10 space-y-8">
+        {/* 月合計グラフ */}
+        <MonthlyChart />
+        
+        {/* 既存の月別推移グラフ */}
+        <div className="h-[600px]">
         <Card className="shadow-2xl border-0 bg-white/80 dark:bg-black/40 backdrop-blur-xl transition-all duration-500 ease-in-out h-full flex flex-col">
           <CardHeader className="py-3 px-5 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-slate-700/20 dark:to-slate-600/20 backdrop-blur-sm border-b border-gray-200/20 dark:border-white/10 transition-all duration-500 ease-in-out">
             <div className="flex items-center justify-between">
@@ -454,6 +460,7 @@ export default function Page2() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
