@@ -9,56 +9,251 @@ export default function handler(req, res) {
     return;
   }
   
-  // Pythonバックエンドと同じレスポンスを返す（ハードコード）
-  // 2025年8月のデータ
-  const response = {
-    "success": true,
-    "chart_data": [
-      {"date":"01","theoj246":7.18,"theoj246_formatted":"7時間11分","ryo4ryo4n66":6.25,"ryo4ryo4n66_formatted":"6時間15分","kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":2.62,"hinako.tsutsumi2525_formatted":"2時間37分","erin.isozu":0.17,"erin.isozu_formatted":"0時間10分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"02","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":1.62,"kouki0802.ao_formatted":"1時間37分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"03","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":0.57,"erin.isozu_formatted":"0時間34分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"04","theoj246":4.0,"theoj246_formatted":"4時間0分","ryo4ryo4n66":0.85,"ryo4ryo4n66_formatted":"0時間51分","kouki0802.ao":1.95,"kouki0802.ao_formatted":"1時間57分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":3.88,"erin.isozu_formatted":"3時間53分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"05","theoj246":5.38,"theoj246_formatted":"5時間23分","ryo4ryo4n66":0.4,"ryo4ryo4n66_formatted":"0時間24分","kouki0802.ao":4.22,"kouki0802.ao_formatted":"4時間13分","hinako.tsutsumi2525":1.73,"hinako.tsutsumi2525_formatted":"1時間44分","erin.isozu":1.12,"erin.isozu_formatted":"1時間7分","marikou180522":2.42,"marikou180522_formatted":"2時間25分","yuta.takasu":1.68,"yuta.takasu_formatted":"1時間41分","kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"06","theoj246":5.37,"theoj246_formatted":"5時間22分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":5.93,"marikou180522_formatted":"5時間56分","yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"07","theoj246":4.38,"theoj246_formatted":"4時間23分","ryo4ryo4n66":5.4,"ryo4ryo4n66_formatted":"5時間24分","kouki0802.ao":4.63,"kouki0802.ao_formatted":"4時間38分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":2.18,"erin.isozu_formatted":"2時間11分","marikou180522":1.17,"marikou180522_formatted":"1時間10分","yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"08","theoj246":6.48,"theoj246_formatted":"6時間29分","ryo4ryo4n66":4.92,"ryo4ryo4n66_formatted":"4時間55分","kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":1.13,"hinako.tsutsumi2525_formatted":"1時間8分","erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":5.6,"marikou180522_formatted":"5時間36分","yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"09","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":4.03,"kouki0802.ao_formatted":"4時間2分","hinako.tsutsumi2525":6.62,"hinako.tsutsumi2525_formatted":"6時間37分","erin.isozu":0.73,"erin.isozu_formatted":"0時間44分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"10","theoj246":5.6,"theoj246_formatted":"5時間36分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":3.02,"kouki0802.ao_formatted":"3時間1分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"11","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":3.3,"hinako.tsutsumi2525_formatted":"3時間18分","erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":4.5,"marikou180522_formatted":"4時間30分","yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"12","theoj246":1.73,"theoj246_formatted":"1時間44分","ryo4ryo4n66":7.0,"ryo4ryo4n66_formatted":"7時間0分","kouki0802.ao":6.3,"kouki0802.ao_formatted":"6時間18分","hinako.tsutsumi2525":1.68,"hinako.tsutsumi2525_formatted":"1時間41分","erin.isozu":5.2,"erin.isozu_formatted":"5時間12分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"13","theoj246":3.05,"theoj246_formatted":"3時間3分","ryo4ryo4n66":3.08,"ryo4ryo4n66_formatted":"3時間5分","kouki0802.ao":0.15,"kouki0802.ao_formatted":"0時間9分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":5.0,"erin.isozu_formatted":"5時間0分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"14","theoj246":5.67,"theoj246_formatted":"5時間40分","ryo4ryo4n66":4.97,"ryo4ryo4n66_formatted":"4時間58分","kouki0802.ao":1.13,"kouki0802.ao_formatted":"1時間8分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"15","theoj246":5.58,"theoj246_formatted":"5時間35分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"16","theoj246":5.35,"theoj246_formatted":"5時間21分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":6.25,"erin.isozu_formatted":"6時間15分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"17","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":4.22,"kouki0802.ao_formatted":"4時間13分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"18","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":2.42,"erin.isozu_formatted":"2時間25分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"19","theoj246":5.73,"theoj246_formatted":"5時間44分","ryo4ryo4n66":1.4,"ryo4ryo4n66_formatted":"1時間24分","kouki0802.ao":5.17,"kouki0802.ao_formatted":"5時間10分","hinako.tsutsumi2525":5.18,"hinako.tsutsumi2525_formatted":"5時間11分","erin.isozu":0.8,"erin.isozu_formatted":"0時間48分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":2.85,"kimoppy126_formatted":"2時間51分"},
-      {"date":"20","theoj246":6.52,"theoj246_formatted":"6時間31分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":2.8,"hinako.tsutsumi2525_formatted":"2時間48分","erin.isozu":2.63,"erin.isozu_formatted":"2時間38分","marikou180522":2.03,"marikou180522_formatted":"2時間2分","yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"21","theoj246":5.62,"theoj246_formatted":"5時間37分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":5.73,"kouki0802.ao_formatted":"5時間44分","hinako.tsutsumi2525":1.7,"hinako.tsutsumi2525_formatted":"1時間42分","erin.isozu":1.67,"erin.isozu_formatted":"1時間40分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"22","theoj246":5.58,"theoj246_formatted":"5時間35分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":2.0,"kouki0802.ao_formatted":"2時間0分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":3.3,"erin.isozu_formatted":"3時間18分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"23","theoj246":7.65,"theoj246_formatted":"7時間39分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":6.57,"kouki0802.ao_formatted":"6時間34分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":1.32,"erin.isozu_formatted":"1時間19分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"24","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":1.7,"ryo4ryo4n66_formatted":"1時間42分","kouki0802.ao":1.0,"kouki0802.ao_formatted":"1時間0分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"25","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":2.35,"ryo4ryo4n66_formatted":"2時間21分","kouki0802.ao":5.47,"kouki0802.ao_formatted":"5時間28分","hinako.tsutsumi2525":0.53,"hinako.tsutsumi2525_formatted":"0時間32分","erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"26","theoj246":7.8,"theoj246_formatted":"7時間48分","ryo4ryo4n66":5.45,"ryo4ryo4n66_formatted":"5時間27分","kouki0802.ao":6.58,"kouki0802.ao_formatted":"6時間35分","hinako.tsutsumi2525":4.48,"hinako.tsutsumi2525_formatted":"4時間29分","erin.isozu":4.4,"erin.isozu_formatted":"4時間24分","marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"27","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"28","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"29","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"30","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null},
-      {"date":"31","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null,"marikou180522":null,"marikou180522_formatted":null,"yuta.takasu":null,"yuta.takasu_formatted":null,"kimoppy126":null,"kimoppy126_formatted":null}
-    ],
-    "user_configs": {
-      "theoj246": {"label":"theoj246","color":"hsl(285, 70%, 50%)","work_hours_this_month":"122h44m","work_minutes_this_month":7364},
-      "ryo4ryo4n66": {"label":"ryo4ryo4n66","color":"hsl(360, 70%, 50%)","work_hours_this_month":"38h44m","work_minutes_this_month":2324},
-      "kouki0802.ao": {"label":"kouki0802.ao","color":"hsl(75, 70%, 50%)","work_hours_this_month":"68h53m","work_minutes_this_month":4133},
-      "hinako.tsutsumi2525": {"label":"hinako.tsutsumi2525","color":"hsl(150, 70%, 50%)","work_hours_this_month":"38h22m","work_minutes_this_month":2302},
-      "erin.isozu": {"label":"erin.isozu","color":"hsl(225, 70%, 50%)","work_hours_this_month":"40h49m","work_minutes_this_month":2449},
-      "marikou180522": {"label":"marikou180522","color":"hsl(300, 70%, 50%)","work_hours_this_month":"21h21m","work_minutes_this_month":1281},
-      "yuta.takasu": {"label":"yuta.takasu","color":"hsl(15, 70%, 50%)","work_hours_this_month":"3h29m","work_minutes_this_month":209},
-      "kimoppy126": {"label":"kimoppy126","color":"hsl(90, 70%, 50%)","work_hours_this_month":"2h51m","work_minutes_this_month":171}
-    },
-    "period": "過去31日間",
-    "timestamp": new Date().toISOString()
-  };
+  const { days = 31, top_users = 15, month_offset = 0 } = req.query;
   
-  res.status(200).json(response);
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const csv = require('csv-parse/sync');
+    
+    // Read CSV file
+    let csvData = null;
+    const paths = [
+      path.join(process.cwd(), 'public', 'attendance_data.csv'),
+      path.join(process.cwd(), 'data', 'attendance_data.csv'),
+      '/var/task/public/attendance_data.csv',
+      '/var/task/data/attendance_data.csv'
+    ];
+    
+    for (const p of paths) {
+      try {
+        csvData = fs.readFileSync(p, 'utf8');
+        console.log(`CSV loaded from: ${p}`);
+        break;
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    if (!csvData) {
+      return res.status(500).json({
+        success: false,
+        message: 'CSV file not found',
+        chart_data: [],
+        user_configs: {}
+      });
+    }
+    
+    // Parse CSV
+    const records = csv.parse(csvData, {
+      columns: true,
+      skip_empty_lines: true
+    });
+    
+    console.log(`Loaded ${records.length} records`);
+    
+    // Process attendance data
+    const userTimeData = {};
+    const userSessions = {}; // Track start times for each user
+    
+    // Sort records by date and time
+    records.sort((a, b) => {
+      const dateA = `${a['日付']} ${a['時間']}`;
+      const dateB = `${b['日付']} ${b['時間']}`;
+      return dateA.localeCompare(dateB);
+    });
+    
+    // Process each record
+    records.forEach(record => {
+      const userName = record['ユーザー'] || '';
+      const date = record['日付'] || '';
+      const time = record['時間'] || '';
+      const status = (record['ステータス'] || '').toLowerCase().trim();
+      
+      if (!userName || !date || !time) return;
+      
+      // Initialize user data
+      if (!userTimeData[userName]) {
+        userTimeData[userName] = {
+          dailyMinutes: {},
+          totalMinutes: 0
+        };
+      }
+      
+      if (!userSessions[userName]) {
+        userSessions[userName] = {};
+      }
+      
+      // Extract date key for session tracking
+      const dateKey = date.replace(/\//g, '-');
+      
+      // Process start/end pairs
+      if (status === 's' || status === '開始') {
+        // Start session
+        userSessions[userName][dateKey] = { date, time };
+      } else if (status === 'f' || status === '終了') {
+        // End session - calculate work time
+        if (userSessions[userName][dateKey]) {
+          const startTime = parseTime(userSessions[userName][dateKey].time);
+          const endTime = parseTime(time);
+          
+          if (startTime !== null && endTime !== null) {
+            let workMinutes = 0;
+            
+            // Handle day crossing or reversed times
+            if (endTime < startTime) {
+              workMinutes = (24 * 60 - startTime) + endTime;
+            } else {
+              workMinutes = endTime - startTime;
+            }
+            
+            // Add to daily total
+            if (workMinutes > 0 && workMinutes < 24 * 60) {
+              if (!userTimeData[userName].dailyMinutes[date]) {
+                userTimeData[userName].dailyMinutes[date] = 0;
+              }
+              userTimeData[userName].dailyMinutes[date] += workMinutes;
+              userTimeData[userName].totalMinutes += workMinutes;
+            }
+          }
+          
+          delete userSessions[userName][dateKey];
+        }
+      }
+    });
+    
+    // Calculate target month
+    const now = new Date();
+    let targetYear = now.getFullYear();
+    let targetMonth = now.getMonth() + 1;
+    
+    // Apply month offset
+    if (month_offset && parseInt(month_offset) > 0) {
+      targetMonth -= parseInt(month_offset);
+      while (targetMonth <= 0) {
+        targetMonth += 12;
+        targetYear--;
+      }
+    }
+    
+    const targetMonthStr = `${targetYear}/${String(targetMonth).padStart(2, '0')}`;
+    console.log(`Target month: ${targetMonthStr}`);
+    
+    // Calculate monthly totals for target month
+    const monthlyTotals = {};
+    Object.keys(userTimeData).forEach(userName => {
+      monthlyTotals[userName] = 0;
+      Object.keys(userTimeData[userName].dailyMinutes).forEach(date => {
+        if (date.startsWith(targetMonthStr)) {
+          monthlyTotals[userName] += userTimeData[userName].dailyMinutes[date];
+        }
+      });
+    });
+    
+    // Sort users by monthly total and get top N
+    const sortedUsers = Object.keys(monthlyTotals)
+      .filter(user => monthlyTotals[user] > 0)
+      .sort((a, b) => monthlyTotals[b] - monthlyTotals[a])
+      .slice(0, parseInt(top_users));
+    
+    console.log(`Top ${sortedUsers.length} users for ${targetMonthStr}:`, sortedUsers.slice(0, 5));
+    
+    // Generate chart data
+    const chartData = [];
+    const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+    
+    for (let day = 1; day <= Math.min(lastDay, parseInt(days)); day++) {
+      const dateKey = `${targetYear}/${String(targetMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+      const dayData = { 
+        date: String(day).padStart(2, '0')
+      };
+      
+      sortedUsers.forEach(userName => {
+        const minutes = userTimeData[userName]?.dailyMinutes[dateKey] || 0;
+        
+        if (minutes > 0) {
+          // Convert to decimal hours (e.g., 7.18 for 7h11m)
+          dayData[userName] = Math.round((minutes / 60) * 100) / 100;
+          
+          // Format as string (e.g., "7時間11分")
+          const hours = Math.floor(minutes / 60);
+          const mins = Math.round(minutes % 60);
+          dayData[`${userName}_formatted`] = mins > 0 
+            ? `${hours}時間${mins}分`
+            : `${hours}時間0分`;
+        } else {
+          dayData[userName] = null;
+          dayData[`${userName}_formatted`] = null;
+        }
+      });
+      
+      chartData.push(dayData);
+    }
+    
+    // Generate user configs with colors
+    const userConfigs = {};
+    
+    // Define colors matching Python backend
+    const colors = [
+      '#84CC16', // Lime
+      '#6366F1', // Indigo
+      '#EC4899', // Pink
+      '#10B981', // Emerald
+      '#F97316', // Orange
+      '#14B8A6', // Teal
+      '#EF4444', // Red
+      '#06B6D4', // Cyan
+      '#FB7185', // Rose
+      '#0EA5E9', // Sky
+      '#EAB308', // Yellow
+      '#8B5CF6', // Violet
+      '#4F46E5', // Indigo dark
+      '#F59E0B', // Amber
+      '#A855F7'  // Purple
+    ];
+    
+    sortedUsers.forEach((userName, i) => {
+      const totalMinutes = monthlyTotals[userName] || 0;
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = Math.round(totalMinutes % 60);
+      
+      userConfigs[userName] = {
+        label: userName,
+        color: colors[i % colors.length],
+        work_hours_this_month: minutes > 0 ? `${hours}h${minutes}m` : `${hours}h`,
+        work_minutes_this_month: totalMinutes
+      };
+    });
+    
+    // Return response
+    return res.status(200).json({
+      success: true,
+      chart_data: chartData,
+      user_configs: userConfigs,
+      period: '過去31日間',
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error processing attendance data:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      chart_data: [],
+      user_configs: {}
+    });
+  }
+}
+
+function parseTime(timeStr) {
+  if (!timeStr) return null;
+  
+  const parts = timeStr.split(':');
+  if (parts.length >= 2) {
+    const hours = parseInt(parts[0]) || 0;
+    const minutes = parseInt(parts[1]) || 0;
+    return hours * 60 + minutes;
+  }
+  
+  return null;
 }
