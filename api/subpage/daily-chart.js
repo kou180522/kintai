@@ -196,27 +196,12 @@ export default function handler(req, res) {
     // 日付リストを作成
     const dateList = [];
     if (daysNum === 31 && monthOffsetNum >= 0) {
-      // 月単位表示
-      let lastDay;
+      // 月単位表示 - 常に月末まで表示
+      // 今月でも過去の月でも、常にその月の最終日まで表示
+      const lastDay = new Date(targetYear, targetMonth, 0).getDate();
       
-      // 今月の場合は今日まで、過去の月は月末まで
-      if (monthOffsetNum === 0) {
-        // 今月の場合は現在の日付まで
-        const now = new Date();
-        // 現在の年月と対象の年月が一致しているか確認
-        if (targetYear === now.getFullYear() && targetMonth === now.getMonth() + 1) {
-          lastDay = now.getDate(); // 今日の日付番号を使用
-        } else {
-          // もし対象月が現在月と異なる場合は月末まで
-          lastDay = new Date(targetYear, targetMonth, 0).getDate();
-        }
-      } else {
-        // 過去の月は月末まで
-        lastDay = new Date(targetYear, targetMonth, 0).getDate();
-      }
-      
-      // ログ出力して確認
-      console.log(`Target: ${targetYear}/${targetMonth}, LastDay: ${lastDay}, Now: ${new Date().toISOString()}`);
+      // ログ出力して確認 (本番環境ではコメントアウト推奨)
+      // console.log(`Target: ${targetYear}/${targetMonth}, LastDay: ${lastDay} (showing full month)`);
       
       for (let d = 1; d <= lastDay; d++) {
         const dateStr = `${targetYear}/${targetMonth.toString().padStart(2, '0')}/${d.toString().padStart(2, '0')}`;
@@ -234,28 +219,6 @@ export default function handler(req, res) {
     
     // グラフデータを作成
     const chartData = [];
-    
-    // デバッグ: 27日のデータが存在するか確認
-    if (monthOffsetNum === 0) {
-      const aug27Data = {};
-      sortedUsers.forEach(userName => {
-        const minutes = userDailyData[userName]?.['2025/08/27'];
-        if (minutes) {
-          aug27Data[userName] = minutes;
-        }
-      });
-      if (Object.keys(aug27Data).length > 0) {
-        console.log('Found Aug 27 data for users:', Object.keys(aug27Data));
-      } else {
-        console.log('No Aug 27 data found in userDailyData');
-        // 利用可能な日付を確認
-        const sampleUser = sortedUsers[0];
-        if (sampleUser && userDailyData[sampleUser]) {
-          const availableDates = Object.keys(userDailyData[sampleUser]).filter(d => d.startsWith('2025/08/')).sort();
-          console.log('Available dates for', sampleUser, ':', availableDates.slice(-5));
-        }
-      }
-    }
     
     dateList.forEach(({ display, full }) => {
       const dataPoint = { date: display };
