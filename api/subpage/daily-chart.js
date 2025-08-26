@@ -46,7 +46,6 @@ export default function handler(req, res) {
     
     // ユーザーごとの作業時間を集計
     const userWorkData = {};
-    const userSessions = {};
     
     // レコードをソート
     records.sort((a, b) => {
@@ -55,37 +54,70 @@ export default function handler(req, res) {
       return dateA.localeCompare(dateB);
     });
     
-    // 各レコードを処理
+    // ユーザーごとに日付でグループ化
+    const recordsByUserDate = {};
     records.forEach(record => {
       const userName = record['ユーザー'] || '';
       const date = record['日付'] || '';
-      const time = record['時間'] || '';
-      const status = (record['ステータス'] || '').toLowerCase().trim();
-      const rawStatus = (record['生ステータス'] || '').toLowerCase().trim();
-      
       if (!userName || !date) return;
       
-      // ユーザーデータの初期化
+      const key = `${userName}-${date}`;
+      if (!recordsByUserDate[key]) {
+        recordsByUserDate[key] = [];
+      }
+      recordsByUserDate[key].push(record);
+    });
+    
+    // 各ユーザー・日付ごとに処理
+    Object.keys(recordsByUserDate).forEach(key => {
+      const [userName, date] = key.split('-').slice(0, 2);
+      const fullDate = key.substring(userName.length + 1); // 日付全体を取得
+      const dayRecords = recordsByUserDate[key];
+      
       if (!userWorkData[userName]) {
         userWorkData[userName] = {};
       }
       
-      // セッション管理
-      const sessionKey = `${userName}-${date}`;
+      // その日のレコードを時間順にソート
+      dayRecords.sort((a, b) => {
+        const timeA = a['時間'] || '';
+        const timeB = b['時間'] || '';
+        return timeA.localeCompare(timeB);
+      });
       
-      if (status === 's' || status === '開始') {
-        // 開始時刻と調整時間を記録
-        const adjustment = parseAdjustment(rawStatus);
-        userSessions[sessionKey] = {
-          startTime: time,
-          startAdjustment: adjustment
-        };
-      } else if ((status === 'f' || status === '終了') && userSessions[sessionKey]) {
-        // 終了時刻で作業時間を計算
-        const session = userSessions[sessionKey];
+      // s/fのペアを抽出（ガイドラインに従い、連続sはs/fは無視）
+      const sessions = [];
+      let currentSession = null;
+      
+      dayRecords.forEach(record => {
+        const time = record['時間'] || '';
+        const status = (record['ステータス'] || '').toLowerCase().trim();
+        const rawStatus = (record['生ステータス'] || '').toLowerCase().trim();
+        
+        if (status === 's' || status === '開始') {
+          // 新しいセッションを開始（連続sの場合は最後のsを採用）
+          currentSession = {
+            startTime: time,
+            startAdjustment: parseAdjustment(rawStatus),
+            endTime: null,
+            endAdjustment: 0
+          };
+        } else if ((status === 'f' || status === '終了') && currentSession) {
+          // 現在のセッションを終了（連続fの場合は最初のfを採用）
+          if (!currentSession.endTime) {
+            currentSession.endTime = time;
+            currentSession.endAdjustment = parseAdjustment(rawStatus);
+            sessions.push(currentSession);
+            currentSession = null;
+          }
+        }
+      });
+      
+      // 各セッションの勤務時間を計算
+      let totalMinutes = 0;
+      sessions.forEach(session => {
         const startTime = parseTime(session.startTime);
-        const endTime = parseTime(time);
-        const endAdjustment = parseAdjustment(rawStatus);
+        const endTime = parseTime(session.endTime);
         
         if (startTime !== null && endTime !== null) {
           // 基本勤務時間を計算
@@ -94,17 +126,17 @@ export default function handler(req, res) {
           
           // 調整時間を適用（ガイドラインに従う）
           workMinutes += session.startAdjustment; // 開始時の調整
-          workMinutes += endAdjustment; // 終了時の調整
+          workMinutes += session.endAdjustment; // 終了時の調整
           
-          if (workMinutes > 0 && workMinutes < 24 * 60) {
-            if (!userWorkData[userName][date]) {
-              userWorkData[userName][date] = 0;
-            }
-            userWorkData[userName][date] += workMinutes;
+          if (workMinutes > 0) {
+            totalMinutes += workMinutes;
           }
         }
-        
-        delete userSessions[sessionKey];
+      });
+      
+      // その日の合計勤務時間を記録
+      if (totalMinutes > 0 && totalMinutes < 24 * 60) {
+        userWorkData[userName][fullDate] = totalMinutes;
       }
     });
     
