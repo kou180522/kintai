@@ -198,9 +198,31 @@ export default function handler(req, res) {
     if (daysNum === 31 && monthOffsetNum >= 0) {
       // 月単位表示
       const firstDay = new Date(targetYear, targetMonth - 1, 1);
-      const lastDay = new Date(targetYear, targetMonth, 0);
+      let lastDay;
       
-      for (let d = 1; d <= lastDay.getDate(); d++) {
+      // 今月の場合は今日まで、過去の月は月末まで
+      if (monthOffsetNum === 0) {
+        // 今月の場合は今日の日付まで
+        lastDay = new Date();
+      } else {
+        // 過去の月は月末まで
+        lastDay = new Date(targetYear, targetMonth, 0);
+      }
+      
+      const lastDateNum = lastDay.getDate();
+      
+      for (let d = 1; d <= lastDateNum; d++) {
+        // 今月の場合、今日以降の日付は表示しない
+        if (monthOffsetNum === 0) {
+          const checkDate = new Date(targetYear, targetMonth - 1, d);
+          const today = new Date();
+          today.setHours(23, 59, 59, 999); // 今日の終わりまで含む
+          
+          if (checkDate > today) {
+            break;
+          }
+        }
+        
         const dateStr = `${targetYear}/${targetMonth.toString().padStart(2, '0')}/${d.toString().padStart(2, '0')}`;
         dateList.push({ display: d.toString(), full: dateStr });
       }
