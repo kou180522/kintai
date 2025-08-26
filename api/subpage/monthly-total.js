@@ -123,7 +123,7 @@ export default function handler(req, res) {
         }
       });
       monthRanking.sort((a, b) => b.minutes - a.minutes);
-      userRankings[month] = monthRanking.slice(0, 15); // 上位15人
+      userRankings[month] = monthRanking; // 全員を含む
     });
     
     // 全期間での合計でソートして上位ユーザーを取得
@@ -138,7 +138,6 @@ export default function handler(req, res) {
     const topUsers = Object.entries(totalMinutes)
       .filter(([_, total]) => total > 0)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 15)
       .map(([name]) => name);
     
     // グラフ用データを生成
@@ -161,11 +160,14 @@ export default function handler(req, res) {
       return data;
     });
     
-    // ユーザー設定を生成
+    // ユーザー設定を生成（色を拡張して多数のユーザーに対応）
     const colors = [
       '#84CC16', '#6366F1', '#EC4899', '#10B981', '#F97316',
       '#14B8A6', '#EF4444', '#06B6D4', '#FB7185', '#0EA5E9',
-      '#EAB308', '#8B5CF6', '#4F46E5', '#F59E0B', '#A855F7'
+      '#EAB308', '#8B5CF6', '#4F46E5', '#F59E0B', '#A855F7',
+      '#22D3EE', '#FACC15', '#A78BFA', '#FB923C', '#4ADE80',
+      '#F87171', '#60A5FA', '#C084FC', '#FDE047', '#86EFAC',
+      '#FCA5A5', '#93C5FD', '#D8B4FE', '#FDE68A', '#BBF7D0'
     ];
     
     const userConfigs = {};
