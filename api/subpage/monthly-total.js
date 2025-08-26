@@ -56,6 +56,7 @@ export default function handler(req, res) {
       const date = record['日付'] || '';
       const time = record['時間'] || '';
       const status = (record['ステータス'] || '').toLowerCase().trim();
+      const rawStatus = (record['生ステータス'] || '').toLowerCase().trim();
       
       if (!userName || !date) return;
       
@@ -68,14 +69,27 @@ export default function handler(req, res) {
       const sessionKey = `${userName}-${date}`;
       
       if (status === 's' || status === '開始') {
-        userSessions[sessionKey] = time;
+        // 開始時刻と調整時間を記録
+        const adjustment = parseAdjustment(rawStatus);
+        userSessions[sessionKey] = {
+          startTime: time,
+          startAdjustment: adjustment
+        };
       } else if ((status === 'f' || status === '終了') && userSessions[sessionKey]) {
-        const startTime = parseTime(userSessions[sessionKey]);
+        // 終了時刻で作業時間を計算
+        const session = userSessions[sessionKey];
+        const startTime = parseTime(session.startTime);
         const endTime = parseTime(time);
+        const endAdjustment = parseAdjustment(rawStatus);
         
         if (startTime !== null && endTime !== null) {
+          // 基本勤務時間を計算
           let workMinutes = endTime - startTime;
-          if (workMinutes < 0) workMinutes += 24 * 60;
+          if (workMinutes < 0) workMinutes += 24 * 60; // 日をまたぐ場合
+          
+          // 調整時間を適用（ガイドラインに従う）
+          workMinutes += session.startAdjustment; // 開始時の調整
+          workMinutes += endAdjustment; // 終了時の調整
           
           if (workMinutes > 0 && workMinutes < 24 * 60) {
             if (!userWorkData[userName][date]) {
@@ -211,4 +225,16 @@ function parseTime(timeStr) {
     return parseInt(parts[0]) * 60 + parseInt(parts[1]);
   }
   return null;
+}
+
+function parseAdjustment(rawStatus) {
+  if (!rawStatus) return 0;
+  
+  // s+60, f-30 のような形式から調整時間を抽出
+  const adjustMatch = rawStatus.match(/[sf]([+-]\d+)/);
+  if (adjustMatch) {
+    return parseInt(adjustMatch[1]);
+  }
+  
+  return 0;
 }
