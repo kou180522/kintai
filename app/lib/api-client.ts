@@ -16,13 +16,19 @@ export function getApiUrl(): string {
 
 export async function fetchApi(path: string, options?: RequestInit) {
   const apiUrl = getApiUrl();
-  const url = apiUrl ? `${apiUrl}${path}` : path;
+  
+  // キャッシュを無効化するためにタイムスタンプを追加
+  const separator = path.includes('?') ? '&' : '?';
+  const pathWithTimestamp = `${path}${separator}_t=${Date.now()}`;
+  
+  const url = apiUrl ? `${apiUrl}${pathWithTimestamp}` : pathWithTimestamp;
   
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...options?.headers,
       },
     });

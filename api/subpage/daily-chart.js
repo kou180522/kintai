@@ -197,32 +197,28 @@ export default function handler(req, res) {
     const dateList = [];
     if (daysNum === 31 && monthOffsetNum >= 0) {
       // 月単位表示
-      const firstDay = new Date(targetYear, targetMonth - 1, 1);
       let lastDay;
       
       // 今月の場合は今日まで、過去の月は月末まで
       if (monthOffsetNum === 0) {
-        // 今月の場合は今日の日付まで
-        lastDay = new Date();
+        // 今月の場合は現在の日付まで
+        const now = new Date();
+        // 現在の年月と対象の年月が一致しているか確認
+        if (targetYear === now.getFullYear() && targetMonth === now.getMonth() + 1) {
+          lastDay = now.getDate(); // 今日の日付番号を使用
+        } else {
+          // もし対象月が現在月と異なる場合は月末まで
+          lastDay = new Date(targetYear, targetMonth, 0).getDate();
+        }
       } else {
         // 過去の月は月末まで
-        lastDay = new Date(targetYear, targetMonth, 0);
+        lastDay = new Date(targetYear, targetMonth, 0).getDate();
       }
       
-      const lastDateNum = lastDay.getDate();
+      // ログ出力して確認
+      console.log(`Target: ${targetYear}/${targetMonth}, LastDay: ${lastDay}, Now: ${new Date().toISOString()}`);
       
-      for (let d = 1; d <= lastDateNum; d++) {
-        // 今月の場合、今日以降の日付は表示しない
-        if (monthOffsetNum === 0) {
-          const checkDate = new Date(targetYear, targetMonth - 1, d);
-          const today = new Date();
-          today.setHours(23, 59, 59, 999); // 今日の終わりまで含む
-          
-          if (checkDate > today) {
-            break;
-          }
-        }
-        
+      for (let d = 1; d <= lastDay; d++) {
         const dateStr = `${targetYear}/${targetMonth.toString().padStart(2, '0')}/${d.toString().padStart(2, '0')}`;
         dateList.push({ display: d.toString(), full: dateStr });
       }
