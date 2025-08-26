@@ -183,39 +183,6 @@ export function MonthlyChart() {
             </p>
           </div>
         )}
-        
-        {/* ユーザー別合計時間の表示 */}
-        {topUsers.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              期間合計勤務時間
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {topUsers.slice(0, 10).map((userName) => {
-                const config = chartConfig[userName]
-                return (
-                  <div
-                    key={userName}
-                    className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                  >
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: config?.color }}
-                    />
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                        {config?.label || userName}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {config?.total_hours || '0h'}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   )
