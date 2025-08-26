@@ -150,9 +150,21 @@ export function MonthlyChart() {
                           const [year, month] = value.split('-')
                           return `${year}年${parseInt(month)}月`
                         }}
-                        formatter={(value, name) => {
+                        formatter={(value, name, props) => {
                           const config = chartConfig[name as string]
-                          const formatted = chartData.find(d => d.month === value)?.[`${name}_formatted`]
+                          // propsからペイロード（実際のデータポイント）を取得
+                          const dataPoint = props?.payload
+                          const formatted = dataPoint?.[`${name}_formatted`]
+                          
+                          // value（数値）をフォーマット
+                          let displayValue = formatted
+                          if (!formatted && value !== null && value !== undefined) {
+                            // formattedがない場合は、数値から時間・分を計算
+                            const hours = Math.floor(value as number)
+                            const minutes = Math.round(((value as number) - hours) * 60)
+                            displayValue = `${hours}時間${minutes}分`
+                          }
+                          
                           return (
                             <div className="flex items-center gap-2">
                               <div 
@@ -160,7 +172,7 @@ export function MonthlyChart() {
                                 style={{ backgroundColor: config?.color }}
                               />
                               <span className="font-medium">{config?.label || name}:</span>
-                              <span>{formatted || `${value}時間`}</span>
+                              <span>{displayValue || '0時間0分'}</span>
                             </div>
                           )
                         }}
