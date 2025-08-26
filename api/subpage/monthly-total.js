@@ -91,17 +91,19 @@ export default function handler(req, res) {
         
         if (status === 's' || status === '開始') {
           // 新しいセッションを開始（連続sの場合は最後のsを採用）
+          const adjustmentInfo = parseAdjustment(rawStatus);
           currentSession = {
-            startTime: time,
-            startAdjustment: parseAdjustment(rawStatus),
+            startTime: adjustmentInfo.hasSpecificTime ? adjustmentInfo.specificTime : time,
+            startAdjustment: adjustmentInfo.adjustment,
             endTime: null,
             endAdjustment: 0
           };
         } else if ((status === 'f' || status === '終了') && currentSession) {
           // 現在のセッションを終了（連続fの場合は最初のfを採用）
           if (!currentSession.endTime) {
-            currentSession.endTime = time;
-            currentSession.endAdjustment = parseAdjustment(rawStatus);
+            const adjustmentInfo = parseAdjustment(rawStatus);
+            currentSession.endTime = adjustmentInfo.hasSpecificTime ? adjustmentInfo.specificTime : time;
+            currentSession.endAdjustment = adjustmentInfo.adjustment;
             sessions.push(currentSession);
             currentSession = null;
           }
@@ -262,11 +264,18 @@ function parseTime(timeStr) {
 function parseAdjustment(rawStatus) {
   if (!rawStatus) return 0;
   
+  // まず特定時刻指定（s09:00, f18:00など）をチェック
+  // 特定時刻が指定されている場合は調整時間なし
+  const timeMatch = rawStatus.match(/[sf](\d{1,2}:\d{2})/);
+  if (timeMatch) {
+    return { hasSpecificTime: true, adjustment: 0, specificTime: timeMatch[1] };
+  }
+  
   // s+60, f-30 のような形式から調整時間を抽出
   const adjustMatch = rawStatus.match(/[sf]([+-]\d+)/);
   if (adjustMatch) {
-    return parseInt(adjustMatch[1]);
+    return { hasSpecificTime: false, adjustment: parseInt(adjustMatch[1]), specificTime: null };
   }
   
-  return 0;
+  return { hasSpecificTime: false, adjustment: 0, specificTime: null };
 }
