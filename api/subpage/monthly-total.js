@@ -257,7 +257,8 @@ export default function handler(req, res) {
     
     return res.status(200).json({
       success: true,
-      monthly_data: monthlyData.reverse(), // 古い順に並べ替え
+      chart_data: monthlyData.reverse(), // 古い順に並べ替え（フロントエンド用にchart_dataとして返す）
+      monthly_data: monthlyData, // 互換性のため
       user_configs: userConfigs,
       period: `過去${sortedMonths.length}ヶ月`,
       months: sortedMonths.reverse(),
