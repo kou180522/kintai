@@ -234,6 +234,29 @@ export default function handler(req, res) {
     
     // グラフデータを作成
     const chartData = [];
+    
+    // デバッグ: 27日のデータが存在するか確認
+    if (monthOffsetNum === 0) {
+      const aug27Data = {};
+      sortedUsers.forEach(userName => {
+        const minutes = userDailyData[userName]?.['2025/08/27'];
+        if (minutes) {
+          aug27Data[userName] = minutes;
+        }
+      });
+      if (Object.keys(aug27Data).length > 0) {
+        console.log('Found Aug 27 data for users:', Object.keys(aug27Data));
+      } else {
+        console.log('No Aug 27 data found in userDailyData');
+        // 利用可能な日付を確認
+        const sampleUser = sortedUsers[0];
+        if (sampleUser && userDailyData[sampleUser]) {
+          const availableDates = Object.keys(userDailyData[sampleUser]).filter(d => d.startsWith('2025/08/')).sort();
+          console.log('Available dates for', sampleUser, ':', availableDates.slice(-5));
+        }
+      }
+    }
+    
     dateList.forEach(({ display, full }) => {
       const dataPoint = { date: display };
       
