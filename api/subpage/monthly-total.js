@@ -42,98 +42,36 @@ export default function handler(req, res) {
     // ユーザーごとの作業時間を集計
     const userWorkData = {};
     
-    // レコードをソート
-    records.sort((a, b) => {
-      const dateA = `${a['日付']} ${a['時間']}`;
-      const dateB = `${b['日付']} ${b['時間']}`;
-      return dateA.localeCompare(dateB);
-    });
-    
-    // ユーザーごとに日付でグループ化
-    const recordsByUserDate = {};
+    // CSVデータから勤務時間を抽出
     records.forEach(record => {
       const userName = record['ユーザー'] || '';
       const date = record['日付'] || '';
+      const status = (record['ステータス'] || '').toLowerCase().trim();
+      const workTimeStr = record['開始時刻'] || ''; // 終了レコードの場合、実働時間が「開始時刻」列に入っている
+      
       if (!userName || !date) return;
       
-      const key = `${userName}-${date}`;
-      if (!recordsByUserDate[key]) {
-        recordsByUserDate[key] = [];
-      }
-      recordsByUserDate[key].push(record);
-    });
-    
-    // 各ユーザー・日付ごとに処理
-    Object.keys(recordsByUserDate).forEach(key => {
-      const [userName, date] = key.split('-').slice(0, 2);
-      const fullDate = key.substring(userName.length + 1); // 日付全体を取得
-      const dayRecords = recordsByUserDate[key];
-      
-      if (!userWorkData[userName]) {
-        userWorkData[userName] = {};
-      }
-      
-      // その日のレコードを時間順にソート
-      dayRecords.sort((a, b) => {
-        const timeA = a['時間'] || '';
-        const timeB = b['時間'] || '';
-        return timeA.localeCompare(timeB);
-      });
-      
-      // s/fのペアを抽出（ガイドラインに従い、連続sはs/fは無視）
-      const sessions = [];
-      let currentSession = null;
-      
-      dayRecords.forEach(record => {
-        const time = record['時間'] || '';
-        const status = (record['ステータス'] || '').toLowerCase().trim();
-        const rawStatus = (record['生ステータス'] || '').toLowerCase().trim();
-        
-        if (status === 's' || status === '開始') {
-          // 新しいセッションを開始（連続sの場合は最後のsを採用）
-          const adjustmentInfo = parseAdjustment(rawStatus);
-          currentSession = {
-            startTime: adjustmentInfo.hasSpecificTime ? adjustmentInfo.specificTime : time,
-            startAdjustment: adjustmentInfo.adjustment,
-            endTime: null,
-            endAdjustment: 0
-          };
-        } else if ((status === 'f' || status === '終了') && currentSession) {
-          // 現在のセッションを終了（連続fの場合は最初のfを採用）
-          if (!currentSession.endTime) {
-            const adjustmentInfo = parseAdjustment(rawStatus);
-            currentSession.endTime = adjustmentInfo.hasSpecificTime ? adjustmentInfo.specificTime : time;
-            currentSession.endAdjustment = adjustmentInfo.adjustment;
-            sessions.push(currentSession);
-            currentSession = null;
+      // 終了ステータスのレコードから実働時間を取得
+      if ((status === 'f' || status === '終了') && workTimeStr) {
+        // H:MM:SS形式の時間をパース
+        const timeParts = workTimeStr.split(':');
+        if (timeParts.length >= 2) {
+          const hours = parseInt(timeParts[0]) || 0;
+          const minutes = parseInt(timeParts[1]) || 0;
+          const totalMinutes = hours * 60 + minutes;
+          
+          if (totalMinutes > 0 && totalMinutes < 24 * 60) {
+            if (!userWorkData[userName]) {
+              userWorkData[userName] = {};
+            }
+            
+            // 同じ日付のデータがある場合は加算
+            if (!userWorkData[userName][date]) {
+              userWorkData[userName][date] = 0;
+            }
+            userWorkData[userName][date] += totalMinutes;
           }
         }
-      });
-      
-      // 各セッションの勤務時間を計算
-      let totalMinutes = 0;
-      sessions.forEach(session => {
-        const startTime = parseTime(session.startTime);
-        const endTime = parseTime(session.endTime);
-        
-        if (startTime !== null && endTime !== null) {
-          // 基本勤務時間を計算
-          let workMinutes = endTime - startTime;
-          if (workMinutes < 0) workMinutes += 24 * 60; // 日をまたぐ場合
-          
-          // 調整時間を適用（ガイドラインに従う）
-          workMinutes += session.startAdjustment; // 開始時の調整
-          workMinutes += session.endAdjustment; // 終了時の調整
-          
-          if (workMinutes > 0) {
-            totalMinutes += workMinutes;
-          }
-        }
-      });
-      
-      // その日の合計勤務時間を記録
-      if (totalMinutes > 0 && totalMinutes < 24 * 60) {
-        userWorkData[userName][fullDate] = totalMinutes;
       }
     });
     
@@ -252,30 +190,3 @@ export default function handler(req, res) {
   }
 }
 
-function parseTime(timeStr) {
-  if (!timeStr) return null;
-  const parts = timeStr.split(':');
-  if (parts.length >= 2) {
-    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-  }
-  return null;
-}
-
-function parseAdjustment(rawStatus) {
-  if (!rawStatus) return 0;
-  
-  // まず特定時刻指定（s09:00, f18:00など）をチェック
-  // 特定時刻が指定されている場合は調整時間なし
-  const timeMatch = rawStatus.match(/[sf](\d{1,2}:\d{2})/);
-  if (timeMatch) {
-    return { hasSpecificTime: true, adjustment: 0, specificTime: timeMatch[1] };
-  }
-  
-  // s+60, f-30 のような形式から調整時間を抽出
-  const adjustMatch = rawStatus.match(/[sf]([+-]\d+)/);
-  if (adjustMatch) {
-    return { hasSpecificTime: false, adjustment: parseInt(adjustMatch[1]), specificTime: null };
-  }
-  
-  return { hasSpecificTime: false, adjustment: 0, specificTime: null };
-}

@@ -29,10 +29,10 @@ export function MonthlyChart() {
   const fetchMonthlyData = async () => {
     setIsLoading(true)
     try {
-      const data = await fetchApi(`/api/subpage/monthly-total?months=${monthsToShow}`)
+      const data = await fetchApi(`/api/subpage/monthly-by-user?months=${monthsToShow}&top_users=0`)
       
       if (data && data.success) {
-        setChartData(data.monthly_data || [])
+        setChartData(data.chart_data || [])
         setChartConfig(data.user_configs || {})
         setTopUsers(Object.keys(data.user_configs || {}))
       }

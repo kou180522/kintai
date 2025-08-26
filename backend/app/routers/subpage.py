@@ -474,6 +474,90 @@ async def get_monthly_by_user(
             detail=f"月別ユーザーデータの取得中にエラーが発生しました: {str(e)}"
         )
 
+@router.get("/monthly-total")
+async def get_monthly_total(
+    months: int = Query(default=12, description="表示する月数")
+):
+    """
+    月別の合計勤務時間データを取得（全アクティブユーザー表示）
+    """
+    try:
+        from datetime import datetime
+        
+        # データを再読み込みしてから取得
+        csv_loader.reload_data()
+        user_time_data = csv_loader.get_user_time_data()
+        
+        # アクティブなユーザー（勤務時間がある）を抽出
+        active_users = []
+        for user_name, user_data in user_time_data.items():
+            total_minutes = user_data.get("total_hours", 0) * 60 + user_data.get("total_minutes", 0)
+            if total_minutes > 0:
+                active_users.append((user_name, user_data, total_minutes))
+        
+        # 勤務時間順にソート
+        active_users.sort(key=lambda x: x[2], reverse=True)
+        
+        # 全ての月を収集
+        all_months = set()
+        for _, user_data, _ in active_users:
+            for month_key in user_data.get("monthly_hours", {}).keys():
+                all_months.add(month_key)
+        
+        # 月をソート（新しい順）して指定数取得
+        sorted_months = sorted(all_months, reverse=True)[:months]
+        
+        # グラフデータを古い順に作成
+        chart_data = []
+        for month in reversed(sorted_months):
+            data_point = {"month": month.replace('/', '-')}
+            
+            # 各ユーザーの勤務時間を追加
+            for user_name, user_data, _ in active_users:
+                month_data = user_data.get("monthly_hours", {}).get(month)
+                if month_data:
+                    hours = month_data.get("hours", 0)
+                    minutes = month_data.get("minutes", 0)
+                    decimal_hours = hours + (minutes / 60)
+                    data_point[user_name] = round(decimal_hours, 1)
+                    data_point[f"{user_name}_formatted"] = f"{hours}時間{minutes}分"
+                else:
+                    data_point[user_name] = 0
+                    data_point[f"{user_name}_formatted"] = None
+            
+            chart_data.append(data_point)
+        
+        # ユーザー名リストを取得して色を割り当て
+        all_user_names = [user_name for user_name, _, _ in active_users]
+        user_color_map = get_all_user_colors(all_user_names)
+        
+        # ユーザー設定
+        user_configs = {}
+        for user_name, user_data, total_minutes in active_users:
+            hours = total_minutes // 60
+            mins = total_minutes % 60
+            user_configs[user_name] = {
+                "label": user_name,
+                "color": user_color_map.get(user_name, "#999999"),
+                "total_hours": f"{hours}h{mins}m",
+                "total_minutes": total_minutes
+            }
+        
+        return {
+            "success": True,
+            "monthly_data": chart_data,
+            "user_configs": user_configs,
+            "period": f"過去{len(sorted_months)}ヶ月",
+            "months": [m.replace('/', '-') for m in reversed(sorted_months)],
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"月別合計データの取得中にエラーが発生しました: {str(e)}"
+        )
+
 @router.get("/ranking")
 async def get_ranking(
     period: str = Query(default="all", description="集計期間: all, month, week"),
