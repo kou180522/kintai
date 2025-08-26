@@ -20,8 +20,8 @@ export default function handler(req, res) {
   const targetMonth = month ? parseInt(month) : (now.getMonth() + 1);
   
   try {
-    // CSVファイルを読み込み
-    const csvPath = path.join(process.cwd(), 'public', 'attendance_data.csv');
+    // CSVファイルを読み込み (dataディレクトリから読み込み、Pythonバックエンドと統一)
+    const csvPath = path.join(process.cwd(), 'data', 'attendance_data.csv');
     let csvData;
     
     try {
