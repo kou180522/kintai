@@ -39,40 +39,138 @@ export default function handler(req, res) {
       skip_empty_lines: true
     });
     
-    // ユーザーごとの作業時間を集計
-    const userWorkData = {};
+    // ガイドラインに従った計算ロジック（Pythonバックエンドと同じ）
+    const userAllTimestamps = {};
     
-    // CSVデータから勤務時間を抽出
+    // すべてのレコードをユーザーごとにグループ化
     records.forEach(record => {
       const userName = record['ユーザー'] || '';
       const date = record['日付'] || '';
-      const status = (record['ステータス'] || '').toLowerCase().trim();
-      const workTimeStr = record['開始時刻'] || ''; // 終了レコードの場合、実働時間が「開始時刻」列に入っている
+      const time = record['時間'] || '';
+      const status = record['ステータス'] || '';
+      const rawStatus = record['生ステータス'] || '';
+      const message = record['メッセージ'] || rawStatus || '';
       
-      if (!userName || !date) return;
+      if (!userName || !date || !time) return;
       
-      // 終了ステータスのレコードから実働時間を取得
-      if ((status === 'f' || status === '終了') && workTimeStr) {
-        // H:MM:SS形式の時間をパース
-        const timeParts = workTimeStr.split(':');
-        if (timeParts.length >= 2) {
-          const hours = parseInt(timeParts[0]) || 0;
-          const minutes = parseInt(timeParts[1]) || 0;
-          const totalMinutes = hours * 60 + minutes;
+      if (!userAllTimestamps[userName]) {
+        userAllTimestamps[userName] = [];
+      }
+      
+      // ステータスを正規化
+      const normalizedStatus = parseStatus(status, message);
+      if (!normalizedStatus) return;
+      
+      // 特定時刻の指定があるかチェック
+      const specificTime = parseSpecificTimeFromMessage(message);
+      
+      // 実際の時刻を決定
+      let actualTime;
+      let adjustmentMinutes = null;
+      
+      if (specificTime) {
+        actualTime = specificTime;
+        adjustmentMinutes = null; // 特定時刻指定の場合は調整なし
+      } else {
+        actualTime = time;
+        // 調整時間を取得
+        adjustmentMinutes = parseAdjustmentFromMessage(message);
+      }
+      
+      // タイムスタンプを記録
+      userAllTimestamps[userName].push({
+        date: date,
+        time: actualTime,
+        status: normalizedStatus,
+        adjustmentMinutes: adjustmentMinutes,
+        originalStatus: status,
+        message: message,
+        datetimeStr: `${date} ${actualTime.padStart(5, '0')}`
+      });
+    });
+    
+    // 各ユーザーの勤務時間を計算
+    const userWorkData = {};
+    
+    Object.keys(userAllTimestamps).forEach(userName => {
+      const timestamps = userAllTimestamps[userName];
+      
+      // タイムスタンプを時系列順にソート
+      timestamps.sort((a, b) => a.datetimeStr.localeCompare(b.datetimeStr));
+      
+      // 勤務セッションを抽出
+      const workSessions = [];
+      let currentStart = null;
+      
+      for (let i = 0; i < timestamps.length; i++) {
+        const ts = timestamps[i];
+        
+        if (ts.status === 'start') {
+          // 連続する開始時刻の場合、前のを無視
+          if (currentStart) {
+            console.log(`警告: ${userName} - 連続する開始時刻を検出`);
+          }
+          currentStart = ts;
+        } else if (ts.status === 'end') {
+          if (!currentStart) {
+            console.log(`警告: ${userName} - 開始時刻なしの終了`);
+            continue;
+          }
           
-          if (totalMinutes > 0 && totalMinutes < 24 * 60) {
-            if (!userWorkData[userName]) {
-              userWorkData[userName] = {};
+          // 勤務時間を計算
+          const startTime = parseTime(currentStart.time);
+          const endTime = parseTime(ts.time);
+          
+          if (startTime !== null && endTime !== null) {
+            // 基本の勤務時間を計算
+            let workMinutes = endTime - startTime;
+            
+            // 日跨ぎの処理
+            if (currentStart.date !== ts.date) {
+              const startDate = new Date(currentStart.date.replace(/\//g, '-'));
+              const endDate = new Date(ts.date.replace(/\//g, '-'));
+              const daysDiff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+              
+              if (daysDiff > 0) {
+                workMinutes += daysDiff * 24 * 60;
+              }
+            } else if (workMinutes < 0) {
+              // 同日でも終了が開始より前 = 日跨ぎ
+              workMinutes += 24 * 60;
             }
             
-            // 同じ日付のデータがある場合は加算
-            if (!userWorkData[userName][date]) {
-              userWorkData[userName][date] = 0;
+            // 調整時間を適用（ガイドラインに従う）
+            if (currentStart.adjustmentMinutes !== null) {
+              workMinutes += currentStart.adjustmentMinutes;
             }
-            userWorkData[userName][date] += totalMinutes;
+            if (ts.adjustmentMinutes !== null) {
+              workMinutes += ts.adjustmentMinutes;
+            }
+            
+            // 異常値チェック
+            if (workMinutes > 0 && workMinutes < 24 * 60) {
+              workSessions.push({
+                date: currentStart.date,
+                workMinutes: workMinutes
+              });
+            }
           }
+          
+          currentStart = null;
         }
       }
+      
+      // セッションを日付ごとに集計
+      if (!userWorkData[userName]) {
+        userWorkData[userName] = {};
+      }
+      
+      workSessions.forEach(session => {
+        if (!userWorkData[userName][session.date]) {
+          userWorkData[userName][session.date] = 0;
+        }
+        userWorkData[userName][session.date] += session.workMinutes;
+      });
     });
     
     // 月ごとの集計データを作成
@@ -98,20 +196,6 @@ export default function handler(req, res) {
     // 月リストをソート（新しい順）
     const sortedMonths = Array.from(allMonths).sort().reverse().slice(0, parseInt(months));
     
-    // 各月の合計時間でユーザーをランキング
-    const userRankings = {};
-    sortedMonths.forEach(month => {
-      const monthRanking = [];
-      Object.keys(monthlyTotals).forEach(userName => {
-        const minutes = monthlyTotals[userName][month] || 0;
-        if (minutes > 0) {
-          monthRanking.push({ userName, minutes });
-        }
-      });
-      monthRanking.sort((a, b) => b.minutes - a.minutes);
-      userRankings[month] = monthRanking; // 全員を含む
-    });
-    
     // 全期間での合計でソートして上位ユーザーを取得
     const totalMinutes = {};
     Object.keys(monthlyTotals).forEach(userName => {
@@ -121,7 +205,8 @@ export default function handler(req, res) {
       });
     });
     
-    const topUsers = Object.entries(totalMinutes)
+    // アクティブユーザーのみを抽出
+    const activeUsers = Object.entries(totalMinutes)
       .filter(([_, total]) => total > 0)
       .sort((a, b) => b[1] - a[1])
       .map(([name]) => name);
@@ -130,7 +215,7 @@ export default function handler(req, res) {
     const monthlyData = sortedMonths.map(month => {
       const data = { month: month.replace('/', '-') };
       
-      topUsers.forEach(userName => {
+      activeUsers.forEach(userName => {
         const minutes = monthlyTotals[userName]?.[month] || 0;
         if (minutes > 0) {
           data[userName] = Math.round((minutes / 60) * 10) / 10; // 時間に変換（小数第1位まで）
@@ -146,7 +231,7 @@ export default function handler(req, res) {
       return data;
     });
     
-    // ユーザー設定を生成（色を拡張して多数のユーザーに対応）
+    // ユーザー設定を生成
     const colors = [
       '#84CC16', '#6366F1', '#EC4899', '#10B981', '#F97316',
       '#14B8A6', '#EF4444', '#06B6D4', '#FB7185', '#0EA5E9',
@@ -157,7 +242,7 @@ export default function handler(req, res) {
     ];
     
     const userConfigs = {};
-    topUsers.forEach((userName, i) => {
+    activeUsers.forEach((userName, i) => {
       const total = totalMinutes[userName] || 0;
       const hours = Math.floor(total / 60);
       const mins = Math.round(total % 60);
@@ -190,3 +275,76 @@ export default function handler(req, res) {
   }
 }
 
+// 時刻を分に変換
+function parseTime(timeStr) {
+  if (!timeStr) return null;
+  const parts = timeStr.split(':');
+  if (parts.length >= 2) {
+    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  }
+  return null;
+}
+
+// ステータスを正規化
+function parseStatus(status, message) {
+  if (!status) return null;
+  
+  const statusLower = status.toLowerCase().trim();
+  const messageLower = (message || '').toLowerCase().trim();
+  
+  // ステータスから判定
+  if (statusLower === 's' || statusLower === '開始' || statusLower === 'start') {
+    return 'start';
+  }
+  if (statusLower === 'f' || statusLower === '終了' || statusLower === 'end') {
+    return 'end';
+  }
+  
+  // メッセージから判定
+  if (messageLower.startsWith('s')) return 'start';
+  if (messageLower.startsWith('f')) return 'end';
+  
+  return null;
+}
+
+// メッセージから特定時刻を抽出
+function parseSpecificTimeFromMessage(message) {
+  if (!message) return null;
+  
+  const messageLower = message.toLowerCase().trim();
+  
+  // 特定時刻のパターンをチェック（s/fの後に時刻）
+  const match = messageLower.match(/[sf]?\s*(\d{1,2}):(\d{2})/);
+  if (match) {
+    const hour = parseInt(match[1]);
+    const minute = parseInt(match[2]);
+    
+    if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+      return `${hour}:${minute.toString().padStart(2, '0')}`;
+    }
+  }
+  
+  return null;
+}
+
+// メッセージから調整時間を抽出
+function parseAdjustmentFromMessage(message) {
+  if (!message) return null;
+  
+  const messageLower = message.toLowerCase().trim();
+  
+  // 特定時刻指定がある場合は調整時間なし
+  if (parseSpecificTimeFromMessage(message)) {
+    return null;
+  }
+  
+  // 調整パターンをチェック
+  const match = messageLower.match(/[sf]?\s*([+-])\s*(\d+)/);
+  if (match) {
+    const sign = match[1];
+    const value = parseInt(match[2]);
+    return sign === '+' ? value : -value;
+  }
+  
+  return null;
+}
