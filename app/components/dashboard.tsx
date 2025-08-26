@@ -71,7 +71,7 @@ export function Dashboard() {
         targetYear--
       }
       
-      const data = await fetchApi(`/api/subpage/daily-chart?year=${targetYear}&month=${targetMonth}`)
+      const data = await fetchApi(`/api/subpage/daily-chart?days=31&top_users=20&month_offset=${monthOffset}`)
       
       console.log('Chart data received:', data)
       console.log('Success:', data?.success)
