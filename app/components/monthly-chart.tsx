@@ -29,12 +29,26 @@ export function MonthlyChart() {
   const fetchMonthlyData = async () => {
     setIsLoading(true)
     try {
-      const data = await fetchApi(`/api/subpage/monthly-by-user?months=${monthsToShow}&top_users=0`)
+      // 本番環境ではJavaScript API、開発環境ではPython APIを使用
+      const endpoint = import.meta.env.DEV 
+        ? `/api/subpage/monthly-by-user?months=${monthsToShow}&top_users=0`
+        : `/api/subpage/monthly-total?months=${monthsToShow}`
+      const data = await fetchApi(endpoint)
+      
+      console.log('Monthly data response:', data) // デバッグ用
       
       if (data && data.success) {
-        setChartData(data.chart_data || [])
-        setChartConfig(data.user_configs || {})
-        setTopUsers(Object.keys(data.user_configs || {}))
+        const chartData = data.chart_data || []
+        const userConfigs = data.user_configs || {}
+        const users = Object.keys(userConfigs)
+        
+        console.log('Chart data:', chartData) // デバッグ用
+        console.log('User configs:', userConfigs) // デバッグ用
+        console.log('Users:', users) // デバッグ用
+        
+        setChartData(chartData)
+        setChartConfig(userConfigs)
+        setTopUsers(users)
       }
     } catch (error) {
       console.error('月合計データ取得エラー:', error)
