@@ -13,14 +13,14 @@ export default function handler(req, res) {
     return;
   }
   
-  // クエリパラメータから年月を取得（デフォルトは現在の月）
-  const { year, month } = req.query;
-  const now = new Date();
-  const targetYear = year ? parseInt(year) : now.getFullYear();
-  const targetMonth = month ? parseInt(month) : (now.getMonth() + 1);
+  // クエリパラメータから取得
+  const { days = 31, top_users = 20, month_offset = 0 } = req.query;
+  const daysNum = parseInt(days);
+  const topUsersNum = parseInt(top_users);
+  const monthOffsetNum = parseInt(month_offset);
   
   try {
-    // CSVファイルを読み込み (dataディレクトリから読み込み、Pythonバックエンドと統一)
+    // CSVファイルを読み込み (dataディレクトリから読み込み)
     const csvPath = path.join(process.cwd(), 'data', 'attendance_data.csv');
     let csvData;
     
@@ -28,13 +28,11 @@ export default function handler(req, res) {
       csvData = fs.readFileSync(csvPath, 'utf8');
     } catch (error) {
       console.error('CSV read error:', error);
-      // CSVが読めない場合はハードコードデータを返す
       return res.status(200).json({
-        success: true,
-        chart_data: generateMockData(),
-        user_configs: generateMockUserConfigs(),
-        period: '過去31日間',
-        timestamp: new Date().toISOString()
+        success: false,
+        message: 'CSV file not found',
+        chart_data: [],
+        user_configs: {}
       });
     }
     
@@ -44,161 +42,212 @@ export default function handler(req, res) {
       skip_empty_lines: true
     });
     
-    // ユーザーごとの作業時間を集計
-    const userWorkData = {};
+    // ガイドラインに従った計算ロジック
+    const userAllTimestamps = {};
     
-    // レコードをソート
-    records.sort((a, b) => {
-      const dateA = `${a['日付']} ${a['時間']}`;
-      const dateB = `${b['日付']} ${b['時間']}`;
-      return dateA.localeCompare(dateB);
-    });
-    
-    // ユーザーごとに日付でグループ化
-    const recordsByUserDate = {};
+    // すべてのレコードをユーザーごとにグループ化
     records.forEach(record => {
       const userName = record['ユーザー'] || '';
       const date = record['日付'] || '';
-      if (!userName || !date) return;
+      const time = record['時間'] || '';
+      const status = record['ステータス'] || '';
+      const rawStatus = record['生ステータス'] || '';
+      const message = record['メッセージ'] || rawStatus || '';
       
-      const key = `${userName}-${date}`;
-      if (!recordsByUserDate[key]) {
-        recordsByUserDate[key] = [];
+      if (!userName || !date || !time) return;
+      
+      if (!userAllTimestamps[userName]) {
+        userAllTimestamps[userName] = [];
       }
-      recordsByUserDate[key].push(record);
+      
+      // ステータスを正規化
+      const normalizedStatus = parseStatus(status, message);
+      if (!normalizedStatus) return;
+      
+      // 特定時刻の指定があるかチェック
+      const specificTime = parseSpecificTimeFromMessage(message);
+      
+      // 実際の時刻を決定
+      let actualTime;
+      let adjustmentMinutes = null;
+      
+      if (specificTime) {
+        actualTime = specificTime;
+        adjustmentMinutes = null;
+      } else {
+        actualTime = time;
+        adjustmentMinutes = parseAdjustmentFromMessage(message);
+      }
+      
+      // タイムスタンプを記録
+      userAllTimestamps[userName].push({
+        date: date,
+        time: actualTime,
+        status: normalizedStatus,
+        adjustmentMinutes: adjustmentMinutes,
+        datetimeStr: `${date} ${actualTime.padStart(5, '0')}`
+      });
     });
     
-    // 各ユーザー・日付ごとに処理
-    Object.keys(recordsByUserDate).forEach(key => {
-      const [userName, date] = key.split('-').slice(0, 2);
-      const fullDate = key.substring(userName.length + 1); // 日付全体を取得
-      const dayRecords = recordsByUserDate[key];
+    // 各ユーザーの日別勤務時間を計算
+    const userDailyData = {};
+    
+    Object.keys(userAllTimestamps).forEach(userName => {
+      const timestamps = userAllTimestamps[userName];
       
-      if (!userWorkData[userName]) {
-        userWorkData[userName] = {};
-      }
+      // タイムスタンプを時系列順にソート
+      timestamps.sort((a, b) => a.datetimeStr.localeCompare(b.datetimeStr));
       
-      // その日のレコードを時間順にソート
-      dayRecords.sort((a, b) => {
-        const timeA = a['時間'] || '';
-        const timeB = b['時間'] || '';
-        return timeA.localeCompare(timeB);
-      });
+      // 勤務セッションを抽出
+      const workSessions = [];
+      let currentStart = null;
       
-      // s/fのペアを抽出（ガイドラインに従い、連続sはs/fは無視）
-      const sessions = [];
-      let currentSession = null;
-      
-      dayRecords.forEach(record => {
-        const time = record['時間'] || '';
-        const status = (record['ステータス'] || '').toLowerCase().trim();
-        const rawStatus = (record['生ステータス'] || '').toLowerCase().trim();
+      for (let i = 0; i < timestamps.length; i++) {
+        const ts = timestamps[i];
         
-        if (status === 's' || status === '開始') {
-          // 新しいセッションを開始（連続sの場合は最後のsを採用）
-          const adjustmentInfo = parseAdjustment(rawStatus);
-          currentSession = {
-            startTime: adjustmentInfo.hasSpecificTime ? adjustmentInfo.specificTime : time,
-            startAdjustment: adjustmentInfo.adjustment,
-            endTime: null,
-            endAdjustment: 0
-          };
-        } else if ((status === 'f' || status === '終了') && currentSession) {
-          // 現在のセッションを終了（連続fの場合は最初のfを採用）
-          if (!currentSession.endTime) {
-            const adjustmentInfo = parseAdjustment(rawStatus);
-            currentSession.endTime = adjustmentInfo.hasSpecificTime ? adjustmentInfo.specificTime : time;
-            currentSession.endAdjustment = adjustmentInfo.adjustment;
-            sessions.push(currentSession);
-            currentSession = null;
-          }
-        }
-      });
-      
-      // 各セッションの勤務時間を計算
-      let totalMinutes = 0;
-      sessions.forEach(session => {
-        const startTime = parseTime(session.startTime);
-        const endTime = parseTime(session.endTime);
-        
-        if (startTime !== null && endTime !== null) {
-          // 基本勤務時間を計算
-          let workMinutes = endTime - startTime;
-          if (workMinutes < 0) workMinutes += 24 * 60; // 日をまたぐ場合
+        if (ts.status === 'start') {
+          currentStart = ts;
+        } else if (ts.status === 'end' && currentStart) {
+          // 勤務時間を計算
+          const startTime = parseTime(currentStart.time);
+          const endTime = parseTime(ts.time);
           
-          // 調整時間を適用（ガイドラインに従う）
-          workMinutes += session.startAdjustment; // 開始時の調整
-          workMinutes += session.endAdjustment; // 終了時の調整
-          
-          if (workMinutes > 0) {
-            totalMinutes += workMinutes;
+          if (startTime !== null && endTime !== null) {
+            // 基本の勤務時間を計算
+            let workMinutes = endTime - startTime;
+            
+            // 日跨ぎの処理
+            if (currentStart.date !== ts.date) {
+              const startDate = new Date(currentStart.date.replace(/\//g, '-'));
+              const endDate = new Date(ts.date.replace(/\//g, '-'));
+              const daysDiff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+              
+              if (daysDiff > 0) {
+                workMinutes += daysDiff * 24 * 60;
+              }
+            } else if (workMinutes < 0) {
+              workMinutes += 24 * 60;
+            }
+            
+            // 調整時間を適用
+            if (currentStart.adjustmentMinutes !== null) {
+              workMinutes += currentStart.adjustmentMinutes;
+            }
+            if (ts.adjustmentMinutes !== null) {
+              workMinutes += ts.adjustmentMinutes;
+            }
+            
+            // 異常値チェック
+            if (workMinutes > 0 && workMinutes < 24 * 60) {
+              workSessions.push({
+                date: currentStart.date,
+                workMinutes: workMinutes
+              });
+            }
           }
+          
+          currentStart = null;
         }
-      });
-      
-      // その日の合計勤務時間を記録
-      if (totalMinutes > 0 && totalMinutes < 24 * 60) {
-        userWorkData[userName][fullDate] = totalMinutes;
       }
-    });
-    
-    // 指定された年月のデータを抽出
-    const targetMonthStr = `${targetYear}/${String(targetMonth).padStart(2, '0')}`;
-    const monthlyTotals = {};
-    
-    Object.keys(userWorkData).forEach(userName => {
-      monthlyTotals[userName] = 0;
-      Object.keys(userWorkData[userName]).forEach(date => {
-        if (date.startsWith(targetMonthStr)) {
-          monthlyTotals[userName] += userWorkData[userName][date];
+      
+      // セッションを日付ごとに集計
+      if (!userDailyData[userName]) {
+        userDailyData[userName] = {};
+      }
+      
+      workSessions.forEach(session => {
+        if (!userDailyData[userName][session.date]) {
+          userDailyData[userName][session.date] = 0;
         }
+        userDailyData[userName][session.date] += session.workMinutes;
       });
     });
     
-    // アクティブユーザー全員を取得（制限なし）
-    const topUsers = Object.entries(monthlyTotals)
-      .filter(([_, total]) => total > 0)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name]) => name);
+    // 月別の合計を計算してトップユーザーを選定
+    const now = new Date();
+    let targetYear = now.getFullYear();
+    let targetMonth = now.getMonth() + 1 - monthOffsetNum;
     
-    // グラフデータを生成
-    const chartData = [];
-    const lastDay = new Date(targetYear, targetMonth, 0).getDate(); // 月の最終日を取得
-    
-    for (let day = 1; day <= lastDay; day++) {
-      const dayStr = String(day).padStart(2, '0');
-      const dateKey = `${targetMonthStr}/${dayStr}`;
-      const dayData = { date: dayStr };
-      
-      topUsers.forEach(userName => {
-        const minutes = userWorkData[userName]?.[dateKey] || 0;
-        if (minutes > 0) {
-          dayData[userName] = Math.round((minutes / 60) * 100) / 100;
-          const hours = Math.floor(minutes / 60);
-          const mins = Math.round(minutes % 60);
-          dayData[`${userName}_formatted`] = `${hours}時間${mins}分`;
-        } else {
-          dayData[userName] = null;
-          dayData[`${userName}_formatted`] = null;
-        }
-      });
-      
-      chartData.push(dayData);
+    while (targetMonth <= 0) {
+      targetMonth += 12;
+      targetYear--;
     }
     
-    // ユーザー設定を生成（色を拡張して多数のユーザーに対応）
+    const targetMonthStr = `${targetYear}/${targetMonth.toString().padStart(2, '0')}`;
+    
+    // 該当月の合計時間でユーザーをソート
+    const monthlyTotals = {};
+    Object.keys(userDailyData).forEach(userName => {
+      monthlyTotals[userName] = 0;
+      Object.keys(userDailyData[userName]).forEach(date => {
+        if (date.startsWith(targetMonthStr)) {
+          monthlyTotals[userName] += userDailyData[userName][date];
+        }
+      });
+    });
+    
+    // トップユーザーを選定
+    const sortedUsers = Object.entries(monthlyTotals)
+      .filter(([_, total]) => total > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, topUsersNum)
+      .map(([name]) => name);
+    
+    // 日付リストを作成
+    const dateList = [];
+    if (daysNum === 31 && monthOffsetNum >= 0) {
+      // 月単位表示
+      const firstDay = new Date(targetYear, targetMonth - 1, 1);
+      const lastDay = new Date(targetYear, targetMonth, 0);
+      
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const dateStr = `${targetYear}/${targetMonth.toString().padStart(2, '0')}/${d.toString().padStart(2, '0')}`;
+        dateList.push({ display: d.toString(), full: dateStr });
+      }
+    } else {
+      // 指定日数分
+      for (let i = daysNum - 1; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        const dateStr = `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+        dateList.push({ display: `${date.getMonth() + 1}/${date.getDate()}`, full: dateStr });
+      }
+    }
+    
+    // グラフデータを作成
+    const chartData = [];
+    dateList.forEach(({ display, full }) => {
+      const dataPoint = { date: display };
+      
+      sortedUsers.forEach(userName => {
+        const minutes = userDailyData[userName]?.[full] || 0;
+        if (minutes > 0) {
+          const hours = minutes / 60;
+          dataPoint[userName] = Math.round(hours * 100) / 100;
+          const h = Math.floor(minutes / 60);
+          const m = Math.round(minutes % 60);
+          dataPoint[`${userName}_formatted`] = `${h}時間${m}分`;
+        } else {
+          dataPoint[userName] = null;
+          dataPoint[`${userName}_formatted`] = null;
+        }
+      });
+      
+      chartData.push(dataPoint);
+    });
+    
+    // ユーザー設定を生成
     const colors = [
       '#84CC16', '#6366F1', '#EC4899', '#10B981', '#F97316',
       '#14B8A6', '#EF4444', '#06B6D4', '#FB7185', '#0EA5E9',
       '#EAB308', '#8B5CF6', '#4F46E5', '#F59E0B', '#A855F7',
       '#22D3EE', '#FACC15', '#A78BFA', '#FB923C', '#4ADE80',
-      '#F87171', '#60A5FA', '#C084FC', '#FDE047', '#86EFAC',
-      '#FCA5A5', '#93C5FD', '#D8B4FE', '#FDE68A', '#BBF7D0'
+      '#F87171', '#60A5FA', '#C084FC', '#FDE047', '#86EFAC'
     ];
     
     const userConfigs = {};
-    topUsers.forEach((userName, i) => {
-      const totalMinutes = monthlyTotals[userName] || 0;
+    sortedUsers.forEach((userName, i) => {
+      const totalMinutes = monthlyTotals[userName];
       const hours = Math.floor(totalMinutes / 60);
       const mins = Math.round(totalMinutes % 60);
       
@@ -214,26 +263,22 @@ export default function handler(req, res) {
       success: true,
       chart_data: chartData,
       user_configs: userConfigs,
-      period: `${targetYear}年${targetMonth}月`,
-      timestamp: new Date().toISOString(),
-      year: targetYear,
-      month: targetMonth
+      period: monthOffsetNum === 0 ? '今月' : `${Math.abs(monthOffsetNum)}ヶ月前`,
+      timestamp: new Date().toISOString()
     });
     
   } catch (error) {
     console.error('API Error:', error);
-    // エラー時もデータを返す
-    return res.status(200).json({
-      success: true,
-      chart_data: generateMockData(),
-      user_configs: generateMockUserConfigs(),
-      period: '過去31日間',
-      timestamp: new Date().toISOString(),
-      error: error.message
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+      chart_data: [],
+      user_configs: {}
     });
   }
 }
 
+// 時刻を分に変換
 function parseTime(timeStr) {
   if (!timeStr) return null;
   const parts = timeStr.split(':');
@@ -243,68 +288,61 @@ function parseTime(timeStr) {
   return null;
 }
 
-function parseAdjustment(rawStatus) {
-  if (!rawStatus) return 0;
+// ステータスを正規化
+function parseStatus(status, message) {
+  if (!status) return null;
   
-  // まず特定時刻指定（s09:00, f18:00など）をチェック
-  // 特定時刻が指定されている場合は調整時間なし
-  const timeMatch = rawStatus.match(/[sf](\d{1,2}:\d{2})/);
-  if (timeMatch) {
-    return { hasSpecificTime: true, adjustment: 0, specificTime: timeMatch[1] };
+  const statusLower = status.toLowerCase().trim();
+  const messageLower = (message || '').toLowerCase().trim();
+  
+  if (statusLower === 's' || statusLower === '開始' || statusLower === 'start') {
+    return 'start';
+  }
+  if (statusLower === 'f' || statusLower === '終了' || statusLower === 'end') {
+    return 'end';
   }
   
-  // s+60, f-30 のような形式から調整時間を抽出
-  const adjustMatch = rawStatus.match(/[sf]([+-]\d+)/);
-  if (adjustMatch) {
-    return { hasSpecificTime: false, adjustment: parseInt(adjustMatch[1]), specificTime: null };
+  if (messageLower.startsWith('s')) return 'start';
+  if (messageLower.startsWith('f')) return 'end';
+  
+  return null;
+}
+
+// メッセージから特定時刻を抽出
+function parseSpecificTimeFromMessage(message) {
+  if (!message) return null;
+  
+  const messageLower = message.toLowerCase().trim();
+  
+  const match = messageLower.match(/[sf]?\s*(\d{1,2}):(\d{2})/);
+  if (match) {
+    const hour = parseInt(match[1]);
+    const minute = parseInt(match[2]);
+    
+    if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+      return `${hour}:${minute.toString().padStart(2, '0')}`;
+    }
   }
   
-  return { hasSpecificTime: false, adjustment: 0, specificTime: null };
+  return null;
 }
 
-function generateMockData() {
-  // ハードコードされたモックデータ
-  return [
-    {"date":"01","theoj246":7.18,"theoj246_formatted":"7時間11分","ryo4ryo4n66":6.25,"ryo4ryo4n66_formatted":"6時間15分","kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":2.62,"hinako.tsutsumi2525_formatted":"2時間37分","erin.isozu":0.17,"erin.isozu_formatted":"0時間10分"},
-    {"date":"02","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":1.62,"kouki0802.ao_formatted":"1時間37分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"03","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":0.57,"erin.isozu_formatted":"0時間34分"},
-    {"date":"04","theoj246":4.0,"theoj246_formatted":"4時間0分","ryo4ryo4n66":0.85,"ryo4ryo4n66_formatted":"0時間51分","kouki0802.ao":1.95,"kouki0802.ao_formatted":"1時間57分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":3.88,"erin.isozu_formatted":"3時間53分"},
-    {"date":"05","theoj246":5.38,"theoj246_formatted":"5時間23分","ryo4ryo4n66":0.4,"ryo4ryo4n66_formatted":"0時間24分","kouki0802.ao":4.22,"kouki0802.ao_formatted":"4時間13分","hinako.tsutsumi2525":1.73,"hinako.tsutsumi2525_formatted":"1時間44分","erin.isozu":1.12,"erin.isozu_formatted":"1時間7分"},
-    {"date":"06","theoj246":5.37,"theoj246_formatted":"5時間22分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"07","theoj246":4.38,"theoj246_formatted":"4時間23分","ryo4ryo4n66":5.4,"ryo4ryo4n66_formatted":"5時間24分","kouki0802.ao":4.63,"kouki0802.ao_formatted":"4時間38分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":2.18,"erin.isozu_formatted":"2時間11分"},
-    {"date":"08","theoj246":6.48,"theoj246_formatted":"6時間29分","ryo4ryo4n66":4.92,"ryo4ryo4n66_formatted":"4時間55分","kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":1.13,"hinako.tsutsumi2525_formatted":"1時間8分","erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"09","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":4.03,"kouki0802.ao_formatted":"4時間2分","hinako.tsutsumi2525":6.62,"hinako.tsutsumi2525_formatted":"6時間37分","erin.isozu":0.73,"erin.isozu_formatted":"0時間44分"},
-    {"date":"10","theoj246":5.6,"theoj246_formatted":"5時間36分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":3.02,"kouki0802.ao_formatted":"3時間1分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"11","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":3.3,"hinako.tsutsumi2525_formatted":"3時間18分","erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"12","theoj246":1.73,"theoj246_formatted":"1時間44分","ryo4ryo4n66":7.0,"ryo4ryo4n66_formatted":"7時間0分","kouki0802.ao":6.3,"kouki0802.ao_formatted":"6時間18分","hinako.tsutsumi2525":1.68,"hinako.tsutsumi2525_formatted":"1時間41分","erin.isozu":5.2,"erin.isozu_formatted":"5時間12分"},
-    {"date":"13","theoj246":3.05,"theoj246_formatted":"3時間3分","ryo4ryo4n66":3.08,"ryo4ryo4n66_formatted":"3時間5分","kouki0802.ao":0.15,"kouki0802.ao_formatted":"0時間9分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":5.0,"erin.isozu_formatted":"5時間0分"},
-    {"date":"14","theoj246":5.67,"theoj246_formatted":"5時間40分","ryo4ryo4n66":4.97,"ryo4ryo4n66_formatted":"4時間58分","kouki0802.ao":1.13,"kouki0802.ao_formatted":"1時間8分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"15","theoj246":5.58,"theoj246_formatted":"5時間35分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"16","theoj246":5.35,"theoj246_formatted":"5時間21分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":6.25,"erin.isozu_formatted":"6時間15分"},
-    {"date":"17","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":4.22,"kouki0802.ao_formatted":"4時間13分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"18","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":2.42,"erin.isozu_formatted":"2時間25分"},
-    {"date":"19","theoj246":5.73,"theoj246_formatted":"5時間44分","ryo4ryo4n66":1.4,"ryo4ryo4n66_formatted":"1時間24分","kouki0802.ao":5.17,"kouki0802.ao_formatted":"5時間10分","hinako.tsutsumi2525":5.18,"hinako.tsutsumi2525_formatted":"5時間11分","erin.isozu":0.8,"erin.isozu_formatted":"0時間48分"},
-    {"date":"20","theoj246":6.52,"theoj246_formatted":"6時間31分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":2.8,"hinako.tsutsumi2525_formatted":"2時間48分","erin.isozu":2.63,"erin.isozu_formatted":"2時間38分"},
-    {"date":"21","theoj246":5.62,"theoj246_formatted":"5時間37分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":5.73,"kouki0802.ao_formatted":"5時間44分","hinako.tsutsumi2525":1.7,"hinako.tsutsumi2525_formatted":"1時間42分","erin.isozu":1.67,"erin.isozu_formatted":"1時間40分"},
-    {"date":"22","theoj246":5.58,"theoj246_formatted":"5時間35分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":2.0,"kouki0802.ao_formatted":"2時間0分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":3.3,"erin.isozu_formatted":"3時間18分"},
-    {"date":"23","theoj246":7.65,"theoj246_formatted":"7時間39分","ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":6.57,"kouki0802.ao_formatted":"6時間34分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":1.32,"erin.isozu_formatted":"1時間19分"},
-    {"date":"24","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":1.7,"ryo4ryo4n66_formatted":"1時間42分","kouki0802.ao":1.0,"kouki0802.ao_formatted":"1時間0分","hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"25","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":2.35,"ryo4ryo4n66_formatted":"2時間21分","kouki0802.ao":5.47,"kouki0802.ao_formatted":"5時間28分","hinako.tsutsumi2525":0.53,"hinako.tsutsumi2525_formatted":"0時間32分","erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"26","theoj246":7.8,"theoj246_formatted":"7時間48分","ryo4ryo4n66":5.45,"ryo4ryo4n66_formatted":"5時間27分","kouki0802.ao":6.58,"kouki0802.ao_formatted":"6時間35分","hinako.tsutsumi2525":4.48,"hinako.tsutsumi2525_formatted":"4時間29分","erin.isozu":4.4,"erin.isozu_formatted":"4時間24分"},
-    {"date":"27","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"28","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"29","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"30","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null},
-    {"date":"31","theoj246":null,"theoj246_formatted":null,"ryo4ryo4n66":null,"ryo4ryo4n66_formatted":null,"kouki0802.ao":null,"kouki0802.ao_formatted":null,"hinako.tsutsumi2525":null,"hinako.tsutsumi2525_formatted":null,"erin.isozu":null,"erin.isozu_formatted":null}
-  ];
-}
-
-function generateMockUserConfigs() {
-  return {
-    "theoj246": {"label":"theoj246","color":"#84CC16","work_hours_this_month":"122h44m","work_minutes_this_month":7364},
-    "ryo4ryo4n66": {"label":"ryo4ryo4n66","color":"#6366F1","work_hours_this_month":"38h44m","work_minutes_this_month":2324},
-    "kouki0802.ao": {"label":"kouki0802.ao","color":"#EC4899","work_hours_this_month":"68h53m","work_minutes_this_month":4133},
-    "hinako.tsutsumi2525": {"label":"hinako.tsutsumi2525","color":"#10B981","work_hours_this_month":"38h22m","work_minutes_this_month":2302},
-    "erin.isozu": {"label":"erin.isozu","color":"#F97316","work_hours_this_month":"40h49m","work_minutes_this_month":2449}
-  };
+// メッセージから調整時間を抽出
+function parseAdjustmentFromMessage(message) {
+  if (!message) return null;
+  
+  const messageLower = message.toLowerCase().trim();
+  
+  if (parseSpecificTimeFromMessage(message)) {
+    return null;
+  }
+  
+  const match = messageLower.match(/[sf]?\s*([+-])\s*(\d+)/);
+  if (match) {
+    const sign = match[1];
+    const value = parseInt(match[2]);
+    return sign === '+' ? value : -value;
+  }
+  
+  return null;
 }

@@ -71,7 +71,9 @@ export function Dashboard() {
         targetYear--
       }
       
-      const data = await fetchApi(`/api/subpage/daily-chart?days=31&top_users=20&month_offset=${monthOffset}`)
+      // 本番環境ではJavaScript API、開発環境ではPython APIを使用
+      const endpoint = `/api/subpage/daily-chart?days=31&top_users=20&month_offset=${monthOffset}`
+      const data = await fetchApi(endpoint)
       
       console.log('Chart data received:', data)
       console.log('Success:', data?.success)
