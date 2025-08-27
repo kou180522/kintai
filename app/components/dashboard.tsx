@@ -46,20 +46,30 @@ export function Dashboard() {
     fetchChartData()
   }, [monthOffset]) // monthOffsetが変更されたら再取得
 
-  // 自動更新（30秒ごと）
+  // 自動更新（5秒ごとに変更 - リアルタイム性向上）
   useEffect(() => {
     if (!autoRefresh) return
     
     const interval = setInterval(() => {
-      fetchChartData()
-    }, 30000) // 30秒ごと
+      fetchChartData(true) // サイレントモードで更新
+    }, 5000) // 5秒ごとに更新（リアルタイム監視）
     
     return () => clearInterval(interval)
   }, [autoRefresh, monthOffset])
 
-  const fetchChartData = async () => {
-    setIsChartLoading(true)
+  const [previousDataHash, setPreviousDataHash] = useState<string>('')
+  const [dataUpdatedAnimation, setDataUpdatedAnimation] = useState(false)
+
+  const fetchChartData = async (silent = false) => {
+    if (!silent) setIsChartLoading(true)
     try {
+      // まずGoogle Sheetsから最新データをチェック
+      try {
+        await fetchApi('/api/monitor/check-now', { method: 'POST' })
+      } catch (error) {
+        console.log('Monitor check skipped:', error)
+      }
+      
       // 月オフセットから年月を計算
       const now = new Date()
       let targetYear = now.getFullYear()
@@ -75,19 +85,29 @@ export function Dashboard() {
       const endpoint = `/api/subpage/daily-chart?days=31&top_users=20&month_offset=${monthOffset}`
       const data = await fetchApi(endpoint)
       
-      console.log('Chart data received:', data)
-      console.log('Success:', data?.success)
-      console.log('Chart data exists:', !!data?.chart_data)
-      console.log('Chart data length:', data?.chart_data?.length)
-      console.log('User configs:', data?.user_configs)
-      console.log('First data point:', data?.chart_data?.[0])
+      // デバッグログを削減（サイレントモードでは出力しない）
+      if (!silent) {
+        console.log('Chart data received:', data?.success)
+      }
       
       if (data && data.success === true) {
           const chartData = data.chart_data || []
           const userConfigs = data.user_configs || {}
           
-          console.log('Setting chart data:', chartData)
-          console.log('Setting user configs:', userConfigs)
+          // データのハッシュを計算して変更を検出
+          const dataHash = JSON.stringify(chartData)
+          if (silent && previousDataHash && previousDataHash !== dataHash) {
+            // データが変更された場合、アニメーションをトリガー
+            console.log('🔔 新しい打刻データを検出しました！')
+            setDataUpdatedAnimation(true)
+            setTimeout(() => setDataUpdatedAnimation(false), 3000)
+          }
+          setPreviousDataHash(dataHash)
+          
+          if (!silent) {
+            console.log('Setting chart data:', chartData)
+            console.log('Setting user configs:', userConfigs)
+          }
           
           setChartData(chartData)
           setChartConfig(userConfigs)
@@ -418,30 +438,37 @@ export function Dashboard() {
                       })()}
                     </CardTitle>
                     <CardDescription className="text-sm text-gray-600 dark:text-gray-300">
-                      {isChartLoading ? 'データ読み込み中...' : 
-                       (() => {
-                         const now = new Date()
-                         let targetMonth = now.getMonth() + 1 - monthOffset
-                         let targetYear = now.getFullYear()
-                         while (targetMonth <= 0) {
-                           targetMonth += 12
-                           targetYear--
-                         }
-                         if (monthOffset === 0) {
-                           // 今月の場合は今日まで表示
-                           return topUsers.length > 0 ? `${targetMonth}月1日〜${now.getDate()}日（全${topUsers.length}人）` : '今月の日別勤務時間を表示しています'
-                         } else {
-                           // 前月の場合は月末まで表示
-                           const lastDay = new Date(targetYear, targetMonth, 0).getDate()
-                           return topUsers.length > 0 ? `${targetMonth}月1日〜${lastDay}日（全${topUsers.length}人）` : `${targetMonth}月の日別勤務時間を表示しています`
-                         }
-                       })()
-                      }
-                      {!isChartLoading && (
-                        <span className="ml-2 text-sm">
-                          最終更新: {lastUpdateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isChartLoading ? 'データ読み込み中...' : 
+                         (() => {
+                           const now = new Date()
+                           let targetMonth = now.getMonth() + 1 - monthOffset
+                           let targetYear = now.getFullYear()
+                           while (targetMonth <= 0) {
+                             targetMonth += 12
+                             targetYear--
+                           }
+                           if (monthOffset === 0) {
+                             // 今月の場合は今日まで表示
+                             return topUsers.length > 0 ? `${targetMonth}月1日〜${now.getDate()}日（全${topUsers.length}人）` : '今月の日別勤務時間を表示しています'
+                           } else {
+                             // 前月の場合は月末まで表示
+                             const lastDay = new Date(targetYear, targetMonth, 0).getDate()
+                             return topUsers.length > 0 ? `${targetMonth}月1日〜${lastDay}日（全${topUsers.length}人）` : `${targetMonth}月の日別勤務時間を表示しています`
+                           }
+                         })()
+                        }
+                        {!isChartLoading && (
+                          <span className="ml-2 text-sm">
+                            最終更新: {lastUpdateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                        {dataUpdatedAnimation && (
+                          <span className="ml-2 px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs rounded-full animate-pulse">
+                            🆕 新しい打刻データ！
+                          </span>
+                        )}
+                      </div>
                     </CardDescription>
                   </div>
                 </div>
@@ -501,7 +528,7 @@ export function Dashboard() {
                     }`}></div>
                     <div className="relative z-10 flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-900 rounded-lg leading-none transition-all duration-500 ease-in-out border-0">
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white transition duration-200">
-                        {autoRefresh ? '自動更新' : '手動'}
+                        {autoRefresh ? '🔄 リアルタイム監視中' : '手動'}
                       </span>
                       <div className={`w-5 h-5 rounded-full transition-all duration-300 ${
                         autoRefresh 
